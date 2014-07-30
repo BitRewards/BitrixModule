@@ -7,6 +7,7 @@ IncludeModuleLangFile(__FILE__);
 
 $module_id = "giftd.coupon";
 CModule::IncludeModule($module_id);
+CModule::IncludeModule('fileman');
 
 $APPLICATION->AddHeadScript('https://yandex.st/jquery/2.0.3/jquery.min.js');
 
@@ -24,7 +25,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"].$_POST["Apply"].$_PO
 }
 ?>
 
-<form method="post" name="giftd_settings" action="<?echo $APPLICATION->GetCurPage()?>?mid=<?=urlencode($module_id)?>&amp;lang=<?=urlencode(LANGUAGE_ID)?>">
+<form method="post" name="giftd_settings" action="<?echo $APPLICATION->GetCurPage()?>?mid=<?=urlencode($module_id)?>&amp;lang=<?=urlencode(LANGUAGE_ID)?>" enctype="multipart/form-data">
     <?
     $aTabs = array(
         array("DIV" => "edit1", "TAB" => GetMessage("MAIN_TAB_SET"), "ICON" => "", "TITLE" => GetMessage("MAIN_TAB_TITLE_SET")),
