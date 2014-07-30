@@ -1,5 +1,9 @@
 <?php
-$MESS ['COMPONENT_TEMPLATE_TYPE_NO'] = 'Нет';
-$MESS ['COMPONENT_TEMPLATE_TYPE_AJAX'] = 'Обработчик для поля ввода купонов';
-$MESS ['COMPONENT_TEMPLATE_TYPE_INPUT'] = 'Поле для ввода купонов с обработчиком';
+$MESS ['COMPONENT_TEMPLATE_TYPE_PHP'] = 'Серверный обработчки';
+$MESS ['COMPONENT_TEMPLATE_TYPE_PHPJS'] = 'Серверный обработчки и ajax-валидатор';
+$MESS ['COMPONENT_TEMPLATE_TYPE_HTML'] = 'Серверный обработчик, ajax и html-форма';
+
+$MESS['JS_TAB_POSITION_TOP'] = 'Сверху';
+$MESS['JS_TAB_POSITION_LEFT'] = 'Слева';
+$MESS['JS_TAB_POSITION_BOTTOM'] = 'Внизу';
 ?>
