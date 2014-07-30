@@ -75,6 +75,31 @@ class GiftdHelper
         return self::GetOption('COMPONENT_TEMPLATE_JS_CALLBACK');
     }
 
+    function UpdateFromFile($key, $postfix)
+    {
+        if(is_array($_FILES[$key.$postfix]))
+        {
+            $image = $_FILES[$key.$postfix];
+            if(strstr($image['type'], 'image/'))
+            {
+                $dst = BX_ROOT.'/modules/'.self::$MODULE_ID.'/img/'.$image['name'];
+                move_uploaded_file($image['tmp_name'], $_SERVER['DOCUMENT_ROOT'].$dst);
+
+                COption::SetOptionString(self::$MODULE_ID, $key.'_TYPE',$image['type']);
+                COption::SetOptionString(self::$MODULE_ID, $key, $dst);
+
+                if($image['size'] <= 3*1024)
+                    COption::SetOptionString(self::$MODULE_ID, $key.'_BASE64', 'Y');
+                else
+                    COption::SetOptionString(self::$MODULE_ID, $key.'_BASE64', 'N');
+
+                return $dst;
+            }
+        }
+
+        return false;
+    }
+
     function UpdateSettings($values)
     {
         global $USER, $arModuleVersion;
@@ -87,6 +112,13 @@ class GiftdHelper
 
         if(!isset($values['JS_PANEL_IS_ACTIVE']))
             $values['JS_PANEL_IS_ACTIVE'] = 'N';
+
+
+        if($dst = self::UpdateFromFile('JS_TAB_PANEL_BG_IMAGE', '_FILE'))
+             $values['JS_TAB_PANEL_BG_IMAGE'] = $dst;
+
+        if($dst = self::UpdateFromFile('JS_CONTENT_BG_IMAGE', '_FILE'))
+             $values['JS_CONTENT_BG_IMAGE'] = $dst;
 
         if( $values['API_KEY'] <> '' && $values['API_KEY'] != self::GetOption('API_KEY') &&
             $values['USER_ID'] <> '' && $values['API_KEY'] != self::GetOption('USER_ID'))
@@ -121,6 +153,12 @@ class GiftdHelper
 
     function MakeJSPanelScript()
     {
+        $image_path = self::GetOption('JS_TAB_PANEL_BG_IMAGE');
+        if(strlen($image_path) > 0 && self::GetOption('JA_TAB_PANEL_GB_IMAGE_BASE64') == 'Y')
+        {
+            $image_path = 'data:'.self::GetOption('JA_TAB_PANEL_GB_IMAGE_TYPE').';base64,'.base64_encode(file_get_contents($image_path));
+        }
+
         $script =
             '<script type="text/javascript">
                 window.giftdOptions = {
@@ -130,7 +168,7 @@ class GiftdHelper
                         position: "'.self::GetOption('JS_TAB_POSITION').'",
                         panelBg: {
                              color: "'.self::GetOption('JS_TAB_PANEL_BG_COLOR').'",
-                             image: "'.self::GetOption('JA_TAB_PANEL_GB_IMAGE').'"
+                             image: "'.$image_path.'"
                         },
                         panelDecor: {
                             top: "'.self::GetOption('JS_TAB_PANEL_DECOR_TOP').'",
@@ -203,14 +241,25 @@ class GiftdHelper
     {
         $html = '<tr class="heading optional"><td colspan="2">'.GetMessage('JS_PANEL_IS_ACTIVE').' <input type="checkbox" name="JS_PANEL_IS_ACTIVE" value="Y" switch="panel_field"'.(self::GetOption('JS_PANEL_IS_ACTIVE')=='Y' ? 'checked="checked"' : '').'></td></tr>';
         $html.= '<tr class="optional panel_field"><td>'.GetMessage('JS_TAB_POSITION').'</td>';
+
         $html.= '<td>';
         foreach(array('top'=>'Top', 'left'=>'Left', 'bottom'=>'Bottom') as $value=>$title) {
             $html .= ' <input type="radio" name="JS_TAB_POSITION" value="'.$value.'" '.(self::GetOption('JS_TAB_POSITION') == $value ? 'checked="checked"' : '').'>'.$title;
         }
         $html.= '</td></tr>';
-        $html.= '<tr class="optional panel_field"><td></td><td><img src="'.BX_ROOT.'/modules/giftd.coupon/img/embedded_tab.png"</td></tr>';
 
-        $skip = array('JS_PANEL_IS_ACTIVE', 'JS_TAB_POSITION');
+        $html.= '<tr class="optional panel_field"><td></td><td><img src="'.BX_ROOT.'/modules/giftd.coupon/img/embedded_tab.png"</td></tr>';
+        $html .= '<tr class="optional panel_field">
+                        <td class="adm-detail-content-cell-l" width="50%">'.GetMessage('JS_TAB_PANEL_BG_IMAGE').'</td>
+                        <td class="adm-detail-content-cell-r" width="50%"><input type="text" name="JS_TAB_PANEL_BG_IMAGE" value="'.GiftdHelper::GetOption('JS_TAB_PANEL_BG_IMAGE').'"> <input type="file" name="JS_TAB_PANEL_BG_IMAGE_FILE" ></td>
+                      </tr>';
+
+        $html .= '<tr class="optional panel_field">
+                        <td class="adm-detail-content-cell-l" width="50%">'.GetMessage('JS_CONTENT_BG_IMAGE').'</td>
+                        <td class="adm-detail-content-cell-r" width="50%"><input type="text" name="JS_CONTENT_BG_IMAGE" value="'.GiftdHelper::GetOption('JS_CONTENT_BG_IMAGE').'"> <input type="file" name="JS_CONTENT_BG_IMAGE_FILE" ></td>
+                      </tr>';
+
+        $skip = array('JS_PANEL_IS_ACTIVE', 'JS_TAB_POSITION', 'JS_TAB_PANEL_BG_IMAGE', 'JS_CONTENT_BG_IMAGE');
         $html.= self::MakeGenericInputOptionFields(array_diff(self::$PANEL_OPTIONS, $skip), 'panel_field');
 
         return $html;
