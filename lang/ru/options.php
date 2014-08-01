@@ -10,15 +10,18 @@ $MESS ['PARTNER_CODE'] = "Код партнера Giftd";
 $MESS ['PARTNER_TOKEN_PREFIX'] = "Префикс кодов подарочных карт";
 
 
-$MESS ['COMPONENT_VIEW_SETTINGS'] = "Компонент валицации кодов подарочной карты";
-$MESS ["COMPONENT_IS_ACTIVE"] = "Использовать компонент";
+$MESS ['COMPONENT_IS_ACTIVE'] = "Использовать встраиваемый компонент проверки кодов";
 $MESS ["COMPONENT_TEMPLATE"] = "Шаблон компонента";
 $MESS ["COMPONENT_TEMPLATE_JS_COUPON_FIELD_ID"] = "ID Вашего элемента для ввода кодов подарочных карт";
 $MESS ["COMPONENT_TEMPLATE_JS_CALLBACK"] = "JS функция, вызываемая после обработки кода подарочной карты";
 
-$MESS ['JS_PANEL_SETTINGS'] = "Графический блок Giftd";
-$MESS ["JS_PANEL_IS_ACTIVE"] = "Отображать вкладку Giftd";
+$MESS ["COMPONENT_TEMPLATE_HELP"] = "Бла бла бла ";
+$MESS ["COMPONENT_TEMPLATE_JS_COUPON_FIELD_ID_HELP"] = "2 Бла бла бла ";
+$MESS ["COMPONENT_TEMPLATE_JS_CALLBACK_HELP"] = " 1Бла бла бла ";
+
+$MESS ["JS_PANEL_IS_ACTIVE"] = "Отображать на сайте графический блок Giftd";
 $MESS ["JS_TAB_POSITION"] = "Местоположение вкладки Giftd";
+$MESS ["JS_PANEL_DECOR_IS_ACTIVE"] = "Настроить внешний вид вкладки";
 $MESS ["JS_TAB_PANEL_BG_COLOR"] = "Свойство вкладки tab.panelBg.color";
 $MESS ["JS_TAB_PANEL_BG_IMAGE"] = "Свойство вкладки tab.panelBg.image";
 $MESS ["JS_TAB_PANEL_DECOR_TOP"] = "Свойство вкладки tab.panelDecor.top";
