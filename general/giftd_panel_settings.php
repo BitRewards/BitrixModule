@@ -25,11 +25,17 @@ class GiftdPanelSettings extends GiftdSettings implements IGiftdSettings
             'JS_PANEL_DESCRIPTION_ICON' => array('SettingTableRow'=>array('File', 'class="optional panel_decor_field"')),
             'JS_CONTENT_BG_IMAGE' => array('SettingTableRow'=>array('File', 'class="optional panel_decor_field"')),
             'JS_CONTENT_COLOR' => array('SettingTableRow'=>array('Text', 'class="optional panel_decor_field"')),
-            'JS_CONTENT_TITLE_COLOR' => array('SettingTableRow'=>array('Text', 'class="optional panel_decor_field"')));
+            'JS_CONTENT_TITLE_COLOR' => array('SettingTableRow'=>array('Text', 'class="optional panel_decor_field"')),
+            array('ValueTableRow'=>array('TemplateHtml')));
 
     protected function BannerHtml($key)
     {
         return '<img src="'.BX_ROOT.'/modules/giftd.coupon/img/embedded_tab.png">';
+    }
+
+    protected function TemplateHtml($key)
+    {
+        return '<img width="600px" src="'.BX_ROOT.'/modules/giftd.coupon/img/embedded_customization.png">';
     }
 }
 
