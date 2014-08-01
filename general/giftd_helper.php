@@ -107,19 +107,28 @@ class GiftdHelper
         foreach($values as $k=>$v)
             $values[strtoupper($k)] = $v;
 
+        //dirty-hack because have no time to make it good
         if(!isset($values['COMPONENT_IS_ACTIVE']))
             $values['COMPONENT_IS_ACTIVE'] = 'N';
 
         if(!isset($values['JS_PANEL_IS_ACTIVE']))
             $values['JS_PANEL_IS_ACTIVE'] = 'N';
 
+        if(!isset($values['JS_PANEL_DECOR_IS_ACTIVE']))
+            $values['JS_PANEL_DECOR_IS_ACTIVE'] = 'N';
 
+        $component_settings = new GiftdComponentSettings(self::$MODULE_ID, new GenericHtmlBuilder());
+        $panel_settings = new GiftdPanelSettings(self::$MODULE_ID, new GenericHtmlBuilder());
+
+        $component_settings->Update($values);
+        $panel_settings->Update($values);
+        /*
         if($dst = self::UpdateFromFile('JS_TAB_PANEL_BG_IMAGE', '_FILE'))
              $values['JS_TAB_PANEL_BG_IMAGE'] = $dst;
 
         if($dst = self::UpdateFromFile('JS_CONTENT_BG_IMAGE', '_FILE'))
              $values['JS_CONTENT_BG_IMAGE'] = $dst;
-
+        */
         if( $values['API_KEY'] <> '' && $values['API_KEY'] != self::GetOption('API_KEY') &&
             $values['USER_ID'] <> '' && $values['API_KEY'] != self::GetOption('USER_ID'))
         {
@@ -142,12 +151,13 @@ class GiftdHelper
             }
         }
 
+        /*
         $allSettings = array_merge(self::$COMPONENT_OPTIONS, self::$PANEL_OPTIONS);
         foreach($allSettings as $key) {
             if(isset($values[$key]))
                 COption::SetOptionString(self::$MODULE_ID, $key, $values[$key]);
         }
-
+        */
 
     }
 
@@ -218,51 +228,14 @@ class GiftdHelper
 
     function MakeComponentOptionsHtml()
     {
-        $is_options_set = self::GetOption('COMPONENT_IS_ACTIVE')=='Y';
-        $selected = $is_options_set ? 'checked="checked"' : '';
-        $style = $is_options_set ? '' : ' style="display:none;"';
-
-        $html = '<tr class="heading optional"><td colspan="2">'.GetMessage('COMPONENT_IS_ACTIVE').' <input type="checkbox" name="COMPONENT_IS_ACTIVE" value="Y" '.$selected.'></td></tr>';
-
-        $html.= '<tr class="optional component_field" '.$style.'><td>'.GetMessage('COMPONENT_TEMPLATE').'</td>';
-        $html.= '<td><select name="COMPONENT_TEMPLATE">';
-        foreach(array('PHP'=>GetMessage('COMPONENT_TEMPLATE_TYPE_PHP'), 'PHPJS'=>GetMessage('COMPONENT_TEMPLATE_TYPE_PHPJS'), 'HTML'=>GetMessage('COMPONENT_TEMPLATE_TYPE_HTML')) as $value=>$title) {
-            $html .= ' <option value="'.$value.'" '.(self::GetOption('COMPONENT_TEMPLATE') == $value ? 'selected' : '').'>'.$title.'</option>';
-        }
-        $html.= '</select></td></tr>';
-
-        $skip = array('COMPONENT_IS_ACTIVE', 'COMPONENT_TEMPLATE');
-        $html.= self::MakeGenericInputOptionFields(array_diff(self::$COMPONENT_OPTIONS, $skip), 'template_field');
-
-        return $html;
+        $settings = new GiftdComponentSettings(self::$MODULE_ID, new GenericHtmlBuilder());
+        return $settings->ToHtml();
     }
 
     function MakePanelOptionsHtml()
     {
-        $html = '<tr class="heading optional"><td colspan="2">'.GetMessage('JS_PANEL_IS_ACTIVE').' <input type="checkbox" name="JS_PANEL_IS_ACTIVE" value="Y" switch="panel_field"'.(self::GetOption('JS_PANEL_IS_ACTIVE')=='Y' ? 'checked="checked"' : '').'></td></tr>';
-        $html.= '<tr class="optional panel_field"><td>'.GetMessage('JS_TAB_POSITION').'</td>';
-
-        $html.= '<td>';
-        foreach(array('top'=>'Top', 'left'=>'Left', 'bottom'=>'Bottom') as $value=>$title) {
-            $html .= ' <input type="radio" name="JS_TAB_POSITION" value="'.$value.'" '.(self::GetOption('JS_TAB_POSITION') == $value ? 'checked="checked"' : '').'>'.$title;
-        }
-        $html.= '</td></tr>';
-
-        $html.= '<tr class="optional panel_field"><td></td><td><img src="'.BX_ROOT.'/modules/giftd.coupon/img/embedded_tab.png"</td></tr>';
-        $html .= '<tr class="optional panel_field">
-                        <td class="adm-detail-content-cell-l" width="50%">'.GetMessage('JS_TAB_PANEL_BG_IMAGE').'</td>
-                        <td class="adm-detail-content-cell-r" width="50%"><input type="text" name="JS_TAB_PANEL_BG_IMAGE" value="'.GiftdHelper::GetOption('JS_TAB_PANEL_BG_IMAGE').'"> <input type="file" name="JS_TAB_PANEL_BG_IMAGE_FILE" ></td>
-                      </tr>';
-
-        $html .= '<tr class="optional panel_field">
-                        <td class="adm-detail-content-cell-l" width="50%">'.GetMessage('JS_CONTENT_BG_IMAGE').'</td>
-                        <td class="adm-detail-content-cell-r" width="50%"><input type="text" name="JS_CONTENT_BG_IMAGE" value="'.GiftdHelper::GetOption('JS_CONTENT_BG_IMAGE').'"> <input type="file" name="JS_CONTENT_BG_IMAGE_FILE" ></td>
-                      </tr>';
-
-        $skip = array('JS_PANEL_IS_ACTIVE', 'JS_TAB_POSITION', 'JS_TAB_PANEL_BG_IMAGE', 'JS_CONTENT_BG_IMAGE');
-        $html.= self::MakeGenericInputOptionFields(array_diff(self::$PANEL_OPTIONS, $skip), 'panel_field');
-
-        return $html;
+        $settings = new GiftdPanelSettings(self::$MODULE_ID, new GenericHtmlBuilder());
+        return $settings->ToHtml();
     }
 
     function MakeGenericInputOptionFields($keys, $class)
