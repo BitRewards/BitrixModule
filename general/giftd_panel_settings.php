@@ -26,7 +26,7 @@ class GiftdPanelSettings extends GiftdSettings implements IGiftdSettings
             'JS_CONTENT_BG_IMAGE' => array('SettingTableRow'=>array('File', 'class="optional panel_decor_field"')),
             'JS_CONTENT_COLOR' => array('SettingTableRow'=>array('Text', 'class="optional panel_decor_field"')),
             'JS_CONTENT_TITLE_COLOR' => array('SettingTableRow'=>array('Text', 'class="optional panel_decor_field"')),
-            array('ValueTableRow'=>array('TemplateHtml')));
+            array('ValueTableRow'=>array('TemplateHtml', 'class="optional panel_decor_field"')));
 
     protected function BannerHtml($key)
     {
