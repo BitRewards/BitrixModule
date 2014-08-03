@@ -100,14 +100,20 @@ class GiftdHelper
         return false;
     }
 
-    private function _handleUninstall($api_key, $user_id)
+    public function handleUninstall($api_key, $user_id)
     {
         $client = new GiftdClient($api_key, $user_id);
         try {
             $client->query('bitrix/uninstall', $this->_getSiteData());
         } catch (Exception $e) {
-            $client = new GiftdClient(null, null);
-            $client->query('bitrix/uninstall', $this->_getSiteData());
+            try {
+                $client = new GiftdClient(null, null);
+                $client->query('bitrix/uninstall', $this->_getSiteData());
+            } catch (Exception $e) {
+                $from = COption::GetOptionString("main", "email_from");
+                $headers = $from ? "From: $from" : null;
+                mail("partner@giftd.ru", "Ошибка при деинсталляция модуля Giftd для Битрикса", $e->__toString(), $headers);
+            }
         }
     }
 
@@ -175,11 +181,10 @@ class GiftdHelper
                     COption::SetOptionString(self::$MODULE_ID, 'PARTNER_TOKEN_PREFIX', $response['data']['partner_token_prefix']);
                 }
             } elseif (empty($api_key) && empty($user_id)) {
-                $this->_handleUninstall($api_key_old, $user_id_old);
-                // call uninstall logic here (with old api_key and old user_id)
+                $this->handleUninstall($api_key_old, $user_id_old);
             }
         }
-        
+
         /*
         $allSettings = array_merge(self::$COMPONENT_OPTIONS, self::$PANEL_OPTIONS);
         foreach($allSettings as $key) {
@@ -228,7 +233,7 @@ class GiftdHelper
                         var el = document.createElement("script");
                         el.id = "giftd-script";
                         el.async = true;
-                        el.src = "https://static.giftd.ru/embedded/" + s + "?rev=1990053171";
+                        el.src = "https://static.giftd.ru/embedded/" + s";
                         document.getElementsByTagName("head")[0].appendChild(el);
                     };
             </script>';

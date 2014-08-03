@@ -21,7 +21,7 @@ abstract class GiftdSettings implements IGiftdSettings
     protected $options;
     protected $_default_class = 'class="optional"';
 
-    public function GiftdSettings($module_id, IHtmlBuilder $html_builder)
+    public function __construct($module_id, IHtmlBuilder $html_builder)
     {
         $this->module_id = $module_id;
         $this->html_builder = $html_builder;
