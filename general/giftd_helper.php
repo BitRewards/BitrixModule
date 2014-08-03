@@ -100,10 +100,39 @@ class GiftdHelper
         return false;
     }
 
-    function UpdateSettings($values)
+    private function _handleUninstall($api_key, $user_id)
+    {
+        $client = new GiftdClient($api_key, $user_id);
+        try {
+            $client->query('bitrix/uninstall', $this->_getSiteData());
+        } catch (Exception $e) {
+            $client = new GiftdClient(null, null);
+            $client->query('bitrix/uninstall', $this->_getSiteData());
+        }
+    }
+
+    private function _getSiteData()
     {
         global $USER, $arModuleVersion;
 
+        $schema = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? 'https' : 'http';
+        $host = (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : $_SERVER['SERVER_NAME']);
+
+        $siteData = CSite::GetByID(SITE_ID)->Fetch();
+        $userData = isset($USER) ? $USER->GetByID($USER->GetId())->Fetch() : null;
+
+        return array(
+            'email' => isset($USER) ? $USER->GetEmail() ?: COption::GetOptionString("main", "email_from") : null,
+            'phone' => $userData ? (isset($userData['PERSONAL_PHONE']) ? $userData['PERSONAL_PHONE'] : $userData['WORK_PHONE']) : null,
+            'name' => isset($USER) ? $USER->GetFullName() : null,
+            'url' => $schema . '://'. $host . '/',
+            'title' => isset($siteData['SITE_NAME']) ? $siteData['SITE_NAME'] : null,
+            'bitrix_module_version' => isset($arModuleVersion) ? $arModuleVersion["VERSION"] : null,
+        );
+    }
+
+    function UpdateSettings($values)
+    {
         foreach($values as $k=>$v)
             $values[strtoupper($k)] = $v;
 
@@ -129,28 +158,28 @@ class GiftdHelper
         if($dst = self::UpdateFromFile('JS_CONTENT_BG_IMAGE', '_FILE'))
              $values['JS_CONTENT_BG_IMAGE'] = $dst;
         */
-        if( $values['API_KEY'] <> '' && $values['API_KEY'] != self::GetOption('API_KEY') &&
-            $values['USER_ID'] <> '' && $values['API_KEY'] != self::GetOption('USER_ID'))
-        {
-            $client = new GiftdClient($values['USER_ID'], $values['API_KEY']);
-            $response = $client->query('bitrix/getData');
-            if($response['type'] == 'data')
-            {
-                COption::SetOptionString(self::$MODULE_ID, 'API_KEY', $values['API_KEY']);
-                COption::SetOptionString(self::$MODULE_ID, 'USER_ID', $values['USER_ID']);
-                COption::SetOptionString(self::$MODULE_ID, 'PARTNER_CODE', $response['data']['partner_code']);
-                COption::SetOptionString(self::$MODULE_ID, 'PARTNER_TOKEN_PREFIX', $response['data']['partner_token_prefix']);
+        $api_key = $values['API_KEY'];
+        $user_id = $values['USER_ID'];
+        if ($values['API_KEY'] != ($api_key_old = self::GetOption('API_KEY')) &&
+            $values['USER_ID'] != ($user_id_old = self::GetOption('USER_ID'))) {
+            if (!empty($api_key) && !empty($user_id)) {
+                $client = new GiftdClient($values['USER_ID'], $values['API_KEY']);
+                $response = $client->query('bitrix/getData');
+                if($response['type'] == 'data') {
+                    $siteData = $this->_getSiteData();
+                    $client->query('bitrix/updateData', $siteData);
 
-                $client->query('bitrix/updateData', array(
-                    'email' => COption::GetOptionString("main", "email_from"),
-                    'phone' => '',
-                    'name' => $USER->GetFullName(),
-                    'url' => 'http://'.$_SERVER['SERVER_NAME '].'/',
-                    'bitrix_module_version' => $arModuleVersion["VERSION"]
-                ));
+                    COption::SetOptionString(self::$MODULE_ID, 'API_KEY', $values['API_KEY']);
+                    COption::SetOptionString(self::$MODULE_ID, 'USER_ID', $values['USER_ID']);
+                    COption::SetOptionString(self::$MODULE_ID, 'PARTNER_CODE', $response['data']['partner_code']);
+                    COption::SetOptionString(self::$MODULE_ID, 'PARTNER_TOKEN_PREFIX', $response['data']['partner_token_prefix']);
+                }
+            } elseif (empty($api_key) && empty($user_id)) {
+                $this->_handleUninstall($api_key_old, $user_id_old);
+                // call uninstall logic here (with old api_key and old user_id)
             }
         }
-
+        
         /*
         $allSettings = array_merge(self::$COMPONENT_OPTIONS, self::$PANEL_OPTIONS);
         foreach($allSettings as $key) {

@@ -30,12 +30,12 @@ class GiftdPanelSettings extends GiftdSettings implements IGiftdSettings
 
     protected function BannerHtml($key)
     {
-        return '<img src="'.BX_ROOT.'/modules/giftd.coupon/img/embedded_tab.png">';
+        return '<img src="https://partner-static.giftd.ru/img/embedded_tab_screenshot.png">';
     }
 
     protected function TemplateHtml($key)
     {
-        return '<img width="600px" src="'.BX_ROOT.'/modules/giftd.coupon/img/embedded_customization.png">';
+        return '<img style="width: 600px;" src="https://partner-static.giftd.ru/img/embedded_customization.png">';
     }
 }
 

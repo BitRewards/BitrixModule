@@ -18,8 +18,8 @@ class GiftdClient
 
     public function __construct($userId, $apiKey)
     {
-        $this->userId = $userId;
-        $this->apiKey = $apiKey;
+        $this->userId = trim($userId);
+        $this->apiKey = trim($apiKey);
         $this->baseUrl = (defined('DEBUG') && DEBUG) ? "https://api.giftd.local/v1/" : "https://api.giftd.ru/v1/";
     }
 
@@ -49,6 +49,11 @@ class GiftdClient
         if (function_exists('curl_init')) {
             $rawResult = $this->httpPostCurl($url, $params);
         } else {
+            array_walk($params, function(&$value){
+                if ($value === null) {
+                    $value = '';
+                }
+            });
             $opts = array('http' =>
                 array(
                     'method'  => 'POST',
@@ -64,8 +69,6 @@ class GiftdClient
             }
         }
 
-        var_dump($rawResult, $url, $params); die;
-
         if (!($result = json_decode($rawResult, true))) {
             throw new Giftd_Exception("Giftd API returned malformed JSON, unable to decode it");
         }
@@ -79,8 +82,12 @@ class GiftdClient
             $params['client_ip'] = $_SERVER['REMOTE_ADDR'];
         }
 
-        $params['signature'] = $this->calculateSignature($method, $params);
-        $params['user_id'] = $this->userId;
+        if ($this->userId) {
+            $params['signature'] = $this->calculateSignature($method, $params);
+            $params['user_id'] = $this->userId;
+        } elseif ($this->apiKey) {
+            $params['api_key'] = $this->apiKey;
+        }
 
         $result = $this->httpPost($this->baseUrl . $method, $params);
         if (empty($result['type'])) {
@@ -298,4 +305,3 @@ class Giftd_NetworkException extends Giftd_Exception
 {
 
 }
-?>
