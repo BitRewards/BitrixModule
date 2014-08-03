@@ -141,13 +141,13 @@ class GiftdHelper
                 COption::SetOptionString(self::$MODULE_ID, 'PARTNER_CODE', $response['data']['partner_code']);
                 COption::SetOptionString(self::$MODULE_ID, 'PARTNER_TOKEN_PREFIX', $response['data']['partner_token_prefix']);
 
-                $client->query('bitrix/updateData', [
+                $client->query('bitrix/updateData', array(
                     'email' => COption::GetOptionString("main", "email_from"),
                     'phone' => '',
                     'name' => $USER->GetFullName(),
                     'url' => 'http://'.$_SERVER['SERVER_NAME '].'/',
                     'bitrix_module_version' => $arModuleVersion["VERSION"]
-                ]);
+                ));
             }
         }
 

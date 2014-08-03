@@ -1,4 +1,4 @@
-<?
+<?php
 $module_id = 'giftd.coupon';
 
 CModule::AddAutoloadClasses(
@@ -14,5 +14,3 @@ CModule::AddAutoloadClasses(
         "GenericHtmlBuilder" => "general/html_builder.php",
     )
 );
-
-?>
