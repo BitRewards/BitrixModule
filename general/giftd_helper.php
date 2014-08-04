@@ -100,15 +100,15 @@ class GiftdHelper
         return false;
     }
 
-    public function handleUninstall($api_key, $user_id)
+    public static function handleUninstall($api_key, $user_id)
     {
         $client = new GiftdClient($api_key, $user_id);
         try {
-            $client->query('bitrix/uninstall', $this->_getSiteData());
+            $client->query('bitrix/uninstall', static::_getSiteData());
         } catch (Exception $e) {
             try {
                 $client = new GiftdClient(null, null);
-                $client->query('bitrix/uninstall', $this->_getSiteData());
+                $client->query('bitrix/uninstall', static::_getSiteData());
             } catch (Exception $e) {
                 $from = COption::GetOptionString("main", "email_from");
                 $headers = $from ? "From: $from" : null;
@@ -117,7 +117,7 @@ class GiftdHelper
         }
     }
 
-    private function _getSiteData()
+    private static function _getSiteData()
     {
         global $USER, $arModuleVersion;
 
@@ -137,7 +137,7 @@ class GiftdHelper
         );
     }
 
-    function UpdateSettings($values)
+    public static function UpdateSettings($values)
     {
         foreach($values as $k=>$v)
             $values[strtoupper($k)] = $v;
@@ -168,11 +168,13 @@ class GiftdHelper
         $user_id = $values['USER_ID'];
         if ($values['API_KEY'] != ($api_key_old = self::GetOption('API_KEY')) &&
             $values['USER_ID'] != ($user_id_old = self::GetOption('USER_ID'))) {
+            static::handleUninstall($api_key_old, $user_id_old);
+
             if (!empty($api_key) && !empty($user_id)) {
                 $client = new GiftdClient($values['USER_ID'], $values['API_KEY']);
                 $response = $client->query('bitrix/getData');
                 if($response['type'] == 'data') {
-                    $siteData = $this->_getSiteData();
+                    $siteData = static::_getSiteData();
                     $client->query('bitrix/updateData', $siteData);
 
                     COption::SetOptionString(self::$MODULE_ID, 'API_KEY', $values['API_KEY']);
@@ -181,7 +183,10 @@ class GiftdHelper
                     COption::SetOptionString(self::$MODULE_ID, 'PARTNER_TOKEN_PREFIX', $response['data']['partner_token_prefix']);
                 }
             } elseif (empty($api_key) && empty($user_id)) {
-                $this->handleUninstall($api_key_old, $user_id_old);
+                COption::SetOptionString(self::$MODULE_ID, 'API_KEY', null);
+                COption::SetOptionString(self::$MODULE_ID, 'USER_ID', null);
+                COption::SetOptionString(self::$MODULE_ID, 'PARTNER_CODE', null);
+                COption::SetOptionString(self::$MODULE_ID, 'PARTNER_TOKEN_PREFIX', null);
             }
         }
 
@@ -233,7 +238,7 @@ class GiftdHelper
                         var el = document.createElement("script");
                         el.id = "giftd-script";
                         el.async = true;
-                        el.src = "https://static.giftd.ru/embedded/" + s";
+                        el.src = "https://static.giftd.ru/embedded/" + s;
                         document.getElementsByTagName("head")[0].appendChild(el);
                     };
             </script>';
@@ -244,11 +249,13 @@ class GiftdHelper
     function MakeModuleOptionsHtml()
     {
         $has_options_set = self::IsSetModuleSettings();
-        $autoconfig = $has_options_set ? '' : '(<a id="SIGN_IN" href="https://partner.giftd.ru/site/login?popup=1">'.GetMessage('SIGN_IN').')';
+        $autoconfig = $has_options_set ? '' : '<a id="SIGN_IN" href="https://partner.giftd.ru/site/login?popup=1">'.GetMessage('SIGN_IN').'</a>';
         $style = $has_options_set ? '' : ' style="display:none;" ';
         $disabled = array('PARTNER_CODE', 'PARTNER_TOKEN_PREFIX');
 
-        $html = '<tr class="heading"><td colspan="2">'.GetMessage('MODULE_API_SETTINGS').' '.$autoconfig.'</td></tr>';
+
+
+        $html = '<tr class="heading"><td colspan="2">'. ($autoconfig ?: GetMessage('MODULE_API_SETTINGS')) .'</td></tr>';
         foreach(self::$API_OPTIONS as $key) {
             $disabled = in_array($key, $disabled) ? ' disabled' : '';
             $html .= '<tr class="optional" '.$style.'>

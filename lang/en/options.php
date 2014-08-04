@@ -2,7 +2,7 @@
 $MESS ['SAVE'] = "Save";
 $MESS ['RESET'] = "Reset";
 
-$MESS ['MODULE_API_SETTINGS'] = "Access for API";
+$MESS ['MODULE_API_SETTINGS'] = "Get access to Giftd API";
 $MESS ['SIGN_IN'] = "Get API access settings";
 $MESS ['API_KEY'] = "API Key";
 $MESS ['USER_ID'] = "User ID";

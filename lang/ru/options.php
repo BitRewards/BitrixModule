@@ -3,7 +3,7 @@ $MESS ['SAVE'] = "Сохранить";
 $MESS ['RESET'] = "Сбросить";
 
 $MESS ['MODULE_API_SETTINGS'] = "Доступ к API";
-$MESS ['SIGN_IN'] = "Получить параметры для доступа к API";
+$MESS ['SIGN_IN'] = "Получить параметры для доступа к API Giftd";
 $MESS ['API_KEY'] = "Ключ API Giftd (api_key)";
 $MESS ['USER_ID'] = "ID пользователя Giftd (user_id)";
 $MESS ['PARTNER_CODE'] = "Код партнера Giftd";
