@@ -25,7 +25,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"].$_POST["Apply"].$_PO
 }
 ?>
 
-<form method="post" name="giftd_settings" action="<?echo $APPLICATION->GetCurPage()?>?mid=<?=urlencode($module_id)?>&amp;lang=<?=urlencode(LANGUAGE_ID)?>" enctype="multipart/form-data">
+<form method="post" name="giftd_settings" action="<?echo $APPLICATION->GetCurPage()?>?mid=<?=urlencode($module_id)?>&lang=<?=urlencode(LANGUAGE_ID)?>" enctype="multipart/form-data">
     <?
     $aTabs = array(
         array("DIV" => "edit1", "TAB" => GetMessage("MAIN_TAB_SET"), "ICON" => "", "TITLE" => GetMessage("MAIN_TAB_TITLE_SET")),
@@ -148,6 +148,17 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"].$_POST["Apply"].$_PO
         }
     }
 
+    function UpdatePanelDecorSettings()
+    {
+        if($('input[name=JS_PANEL_DECOR_IS_ACTIVE').prop('checked')) {
+            $('tr.panel_decor_field').show();
+            $('tr.panel_decor_field').find('input').prop('disabled', false);
+        } else {
+            $('tr.panel_decor_field').hide();
+            $('tr.panel_decor_field').find('input').prop('disabled', true);
+        }
+
+    }
 
 
     $(function(){
@@ -155,10 +166,12 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"].$_POST["Apply"].$_PO
         $('input[name=COMPONENT_IS_ACTIVE').click(UpdateComponentSettings);
         $('select[name=COMPONENT_TEMPLATE]').change(UpdateComponentTemplateSettings);
         $('input[name=JS_PANEL_IS_ACTIVE').click(UpdatePanelSettings);
+        $('input[name=JS_PANEL_DECOR_IS_ACTIVE').click(UpdatePanelDecorSettings);
 
         UpdateComponentTemplateSettings();
         UpdatePanelSettings();
         UpdateComponentSettings();
+        UpdatePanelDecorSettings();
 
         /*
         if($('[name=COMPONENT_IS_ACTIVE]').prop('checked') == false)
