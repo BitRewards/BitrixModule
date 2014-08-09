@@ -71,7 +71,7 @@ class GiftdDiscountManager
             $arCouponFields = array(
                 "DISCOUNT_ID" => $id_discount, //id for 150 RUB discount (first-time order)
                 "ACTIVE" => "Y",
-                "ONE_TIME" => "O",
+                "ONE_TIME" => "Y",
                 "COUPON" => $coupon_code,
                 "DATE_APPLY" => false,
                 'DESCRIPTION' => $card_info['title'].' ('.$card_info['owner'].')'
