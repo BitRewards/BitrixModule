@@ -251,13 +251,13 @@ class GiftdHelper
         $has_options_set = self::IsSetModuleSettings();
         $autoconfig = $has_options_set ? '' : '<a id="SIGN_IN" href="https://partner.giftd.ru/site/login?popup=1">'.GetMessage('SIGN_IN').'</a>';
         $style = $has_options_set ? '' : ' style="display:none;" ';
-        $disabled = array('PARTNER_CODE', 'PARTNER_TOKEN_PREFIX');
+        $disabled_fields = array('PARTNER_CODE', 'PARTNER_TOKEN_PREFIX');
 
 
 
         $html = '<tr class="heading"><td colspan="2">'. ($autoconfig ?: GetMessage('MODULE_API_SETTINGS')) .'</td></tr>';
         foreach(self::$API_OPTIONS as $key) {
-            $disabled = in_array($key, $disabled) ? ' disabled' : '';
+            $disabled = in_array($key, $disabled_fields) ? ' disabled' : '';
             $html .= '<tr class="optional" '.$style.'>
                         <td class="adm-detail-content-cell-l" width="50%">'.GetMessage($key).'</td>
                         <td class="adm-detail-content-cell-r" width="50%"><input type="text" name="'.$key.'" value="'.GiftdHelper::GetOption($key).'" '.$disabled.'></td>
