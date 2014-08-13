@@ -41,7 +41,7 @@ abstract class GiftdSettings implements IGiftdSettings
             if($dst = $this->UpdateFileForm($key, '_FILE'))
                 $settings[$key] = $dst;
 
-            if(isset($settings[$key]))
+            if(array_key_exists($key, $settings))
                 $this->SetValue($key, $settings[$key]);
         }
     }
@@ -93,6 +93,11 @@ abstract class GiftdSettings implements IGiftdSettings
     protected function Text($key)
     {
         return $this->html_builder->GenericInputField($key, $this->Value($key));
+    }
+
+    protected function Textarea($key, $default = null)
+    {
+        return $this->html_builder->GenericTextareaField($key, $this->Value($key), $default);
     }
 
     protected function Checkbox($key)

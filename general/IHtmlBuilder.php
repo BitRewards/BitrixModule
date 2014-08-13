@@ -10,6 +10,8 @@ interface IHtmlBuilder
 {
     public function GenericInputField($name, $value);
 
+    public function GenericTextareaField($name, $value);
+
     public function OneColumnTableRow($html, $properties = '');
 
     public function GenericTableRow($keyHtml, $valHtml, $properties = '');

@@ -33,7 +33,7 @@ Class giftd_coupon extends CModule
 	{
         RegisterModule($this->MODULE_ID);
         RegisterModuleDependences('main', 'OnBeforeProlog', $this->MODULE_ID, 'GiftdHelper', 'CheckPatchOnBeforeProlog');
-        RegisterModuleDependences('main', 'OnBeforeProlog', $this->MODULE_ID, 'GiftdHelper', 'InjectJSPanelScriptOnBeforeProlog');
+        RegisterModuleDependences('main', 'OnBeforeProlog', $this->MODULE_ID, 'GiftdHelper', 'InjectJSTabScriptOnBeforeProlog');
         RegisterModuleDependences('sale', 'OnBeforeOrderAdd', $this->MODULE_ID, 'GiftdDiscountManager', 'ChargeCouponOnBeforeOrderAdd');
 
         return true;
@@ -42,7 +42,7 @@ Class giftd_coupon extends CModule
 	function UnRegister()
 	{
         UnRegisterModuleDependences('main', 'OnBeforeProlog', $this->MODULE_ID, 'GiftdHelper', 'CheckPatchOnBeforeProlog');
-        UnRegisterModuleDependences('main', 'OnBeforeProlog', $this->MODULE_ID, 'GiftdHelper', 'InjectJSPanelScriptOnBeforeProlog');
+        UnRegisterModuleDependences('main', 'OnBeforeProlog', $this->MODULE_ID, 'GiftdHelper', 'InjectJSTabScriptOnBeforeProlog');
         UnRegisterModuleDependences('sale', 'OnBeforeOrderAdd', $this->MODULE_ID, 'GiftdDiscountManager', 'ChargeCouponOnBeforeOrderAdd');
         UnRegisterModule($this->MODULE_ID);
 
@@ -81,8 +81,13 @@ Class giftd_coupon extends CModule
 
 	function DoUninstall()
 	{
+        GiftdHelper::handleUninstall(
+            GiftdHelper::GetOption('API_KEY'),
+            GiftdHelper::GetOption('USER_ID')
+        );
+
         $this->UnInstallFiles();
-        return $this->UnRegister();
+        $this->UnRegister();
 
         return true;
 	}

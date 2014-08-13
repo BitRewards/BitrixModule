@@ -9,7 +9,7 @@ CModule::AddAutoloadClasses(
         "GiftdHelper" => "general/giftd_helper.php",
         "GiftdClient" => "general/giftd_api_client.php",
         "GiftdDiscountManager" => "general/giftd_discount_manager.php",
-        "GiftdPanelSettings" => "general/giftd_panel_settings.php",
+        "GiftdTabSettings" => "general/giftd_tab_settings.php",
         "GiftdComponentSettings" => "general/giftd_component_settings.php",
         "GenericHtmlBuilder" => "general/html_builder.php",
     )

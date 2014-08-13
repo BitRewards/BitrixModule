@@ -8,7 +8,7 @@ class GiftdHelper
 
     static public $API_OPTIONS = array('API_KEY', 'USER_ID', 'PARTNER_CODE', 'PARTNER_TOKEN_PREFIX');
     static public $COMPONENT_OPTIONS = array('COMPONENT_IS_ACTIVE', 'COMPONENT_TEMPLATE', 'COMPONENT_TEMPLATE_JS_COUPON_FIELD_ID', 'COMPONENT_TEMPLATE_JS_CALLBACK');
-    static public $PANEL_OPTIONS = array('JS_PANEL_IS_ACTIVE', 'JS_TAB_POSITION', 'JS_TAB_PANEL_BG_COLOR', 'JS_TAB_PANEL_BG_IMAGE', 'JS_TAB_PANEL_DECOR_TOP', 'JS_TAB_PANEL_DECOR_BOTTOM', 'JS_PANEL_TEXT_COLOR', 'JS_PANEL_DESCRIPTION_COLOR', 'JS_PANEL_DESCRIPTION_ICON', 'JS_CONTENT_BG_IMAGE', 'JS_CONTENT_COLOR', 'JS_CONTENT_TITLE_COLOR');
+    static public $TAB_OPTIONS = array('JS_TAB_IS_ACTIVE', 'JS_TAB_POSITION', 'JS_TAB_CUSTOMIZE', 'JS_TAB_OPTIONS');
 
     function CheckPatchOnBeforeProlog()
     {
@@ -22,13 +22,21 @@ class GiftdHelper
             CopyDirFiles($patch_source, $patch_target, true);
         }
     }
+
+    public static function InjectJSPanelScriptOnBeforeProlog()
+    {
+        static::InjectJSTabScriptOnBeforeProlog();
+    }
     
-    function InjectJSPanelScriptOnBeforeProlog()
+    public static function InjectJSTabScriptOnBeforeProlog()
     {
         global $APPLICATION;
 
-        if (self::IsSetModuleSettings() && strpos($_SERVER['REQUEST_URI'], BX_ROOT.'/admin') === false)
-            $APPLICATION->AddHeadString(self::MakeJSPanelScript());
+        if (self::IsSetModuleSettings() &&
+            isset($_SERVER['REQUEST_URI']) &&
+            strpos($_SERVER['REQUEST_URI'], BX_ROOT.'/admin') === false) {
+            $APPLICATION->AddHeadString(self::getJSTabScript());
+        }
     }
 
     function MakeSettingArray($name, $type, $opt = '', $disabled = '')
@@ -36,9 +44,14 @@ class GiftdHelper
         return array($name, GetMessage($name), self::GetOption($name), array($type, $opt), $disabled);
     }
 
-    function GetOption($key)
+    public static function GetOption($key)
     {
         return COption::GetOptionString(self::$MODULE_ID, $key);
+    }
+
+    public static function SetOption($key, $value)
+    {
+        COption::SetOptionString(self::$MODULE_ID, $key, $value);
     }
 
     function IsSetSettings($keys)
@@ -144,26 +157,14 @@ class GiftdHelper
 
         //dirty-hack because have no time to make it good
         if(!isset($values['COMPONENT_IS_ACTIVE']))
-            $values['COMPONENT_IS_ACTIVE'] = 'N';
+            $values['COMPONENT_IS_ACTIVE'] = null;
 
-        if(!isset($values['JS_PANEL_IS_ACTIVE']))
-            $values['JS_PANEL_IS_ACTIVE'] = 'N';
+        if(!isset($values['JS_TAB_IS_ACTIVE']))
+            $values['JS_TAB_IS_ACTIVE'] = null;
 
-        if(!isset($values['JS_PANEL_DECOR_IS_ACTIVE']))
-            $values['JS_PANEL_DECOR_IS_ACTIVE'] = 'N';
+        if(!isset($values['JS_TAB_CUSTOMIZE']))
+            $values['JS_TAB_CUSTOMIZE'] = null;
 
-        $component_settings = new GiftdComponentSettings(self::$MODULE_ID, new GenericHtmlBuilder());
-        $panel_settings = new GiftdPanelSettings(self::$MODULE_ID, new GenericHtmlBuilder());
-
-        $component_settings->Update($values);
-        $panel_settings->Update($values);
-        /*
-        if($dst = self::UpdateFromFile('JS_TAB_PANEL_BG_IMAGE', '_FILE'))
-             $values['JS_TAB_PANEL_BG_IMAGE'] = $dst;
-
-        if($dst = self::UpdateFromFile('JS_CONTENT_BG_IMAGE', '_FILE'))
-             $values['JS_CONTENT_BG_IMAGE'] = $dst;
-        */
         $api_key = $values['API_KEY'];
         $user_id = $values['USER_ID'];
         if ($values['API_KEY'] != ($api_key_old = self::GetOption('API_KEY')) &&
@@ -177,73 +178,63 @@ class GiftdHelper
                     $siteData = static::_getSiteData();
                     $client->query('bitrix/updateData', $siteData);
 
-                    COption::SetOptionString(self::$MODULE_ID, 'API_KEY', $values['API_KEY']);
-                    COption::SetOptionString(self::$MODULE_ID, 'USER_ID', $values['USER_ID']);
-                    COption::SetOptionString(self::$MODULE_ID, 'PARTNER_CODE', $response['data']['partner_code']);
-                    COption::SetOptionString(self::$MODULE_ID, 'PARTNER_TOKEN_PREFIX', $response['data']['partner_token_prefix']);
+                    $jsOptionsOld = self::GetOption('JS_TAB_OPTIONS');
+                    $partnerCodeOld = self::GetOption('PARTNER_CODE');
+
+                    self::SetOption('API_KEY', $values['API_KEY']);
+                    self::SetOption('USER_ID', $values['API_KEY']);
+                    self::SetOption('PARTNER_CODE', $response['data']['partner_code']);
+                    self::SetOption('PARTNER_TOKEN_PREFIX', $response['data']['partner_token_prefix']);
+
+                    if (!empty($jsOptionsOld)) {
+                        self::SetOption(
+                            'JS_TAB_OPTIONS',
+                            str_replace($partnerCodeOld, $response['data']['partner_code'], $jsOptionsOld)
+                        );
+                    }
                 }
             } elseif (empty($api_key) && empty($user_id)) {
-                COption::SetOptionString(self::$MODULE_ID, 'API_KEY', null);
-                COption::SetOptionString(self::$MODULE_ID, 'USER_ID', null);
-                COption::SetOptionString(self::$MODULE_ID, 'PARTNER_CODE', null);
-                COption::SetOptionString(self::$MODULE_ID, 'PARTNER_TOKEN_PREFIX', null);
+                self::SetOption('API_KEY', null);
+                self::SetOption('USER_ID', null);
+                self::SetOption('PARTNER_CODE', null);
+                self::SetOption('PARTNER_TOKEN_PREFIX', null);
             }
         }
 
-        /*
-        $allSettings = array_merge(self::$COMPONENT_OPTIONS, self::$PANEL_OPTIONS);
-        foreach($allSettings as $key) {
-            if(isset($values[$key]))
-                COption::SetOptionString(self::$MODULE_ID, $key, $values[$key]);
-        }
-        */
+        $component_settings = new GiftdComponentSettings(self::$MODULE_ID, new GenericHtmlBuilder());
+        $tab_settings = new GiftdTabSettings(self::$MODULE_ID, new GenericHtmlBuilder());
 
+        $component_settings->Update($values);
+        $tab_settings->Update($values);
     }
 
-    function MakeJSPanelScript()
+    public static function getDefaultJsOptions()
     {
-        $image_path = self::GetOption('JS_TAB_PANEL_BG_IMAGE');
-        if(strlen($image_path) > 0 && self::GetOption('JA_TAB_PANEL_GB_IMAGE_BASE64') == 'Y')
-        {
-            $image_path = 'data:'.self::GetOption('JA_TAB_PANEL_GB_IMAGE_TYPE').';base64,'.base64_encode(file_get_contents($image_path));
-        }
+        return
+'window.giftdOptions = {
+    pid: "'.self::GetOption('PARTNER_CODE').'",
+    tab: {
+        enabled: '.(self::GetOption('JS_TAB_IS_ACTIVE') ? 'true' : 'false').',
+        position: "'.(self::GetOption('JS_TAB_POSITION') ?: 'left') .'"
+    }
+};';
+    }
 
-        $script =
-            '<script type="text/javascript">
-                window.giftdOptions = {
-                    pid: "'.self::GetOption('PARTNER_CODE').'",
-                    tab: {
-                        enabled: '.(self::GetOption('JS_PANEL_IS_ACTIVE') ? 'true' : 'false').',
-                        position: "'.self::GetOption('JS_TAB_POSITION').'",
-                        panelBg: {
-                             color: "'.self::GetOption('JS_TAB_PANEL_BG_COLOR').'",
-                             image: "'.$image_path.'"
-                        },
-                        panelDecor: {
-                            top: "'.self::GetOption('JS_TAB_PANEL_DECOR_TOP').'",
-                            bottom: "'.self::GetOption('JS_TAB_PANEL_DECOR_BOTTOM').'"
-                        },
-                        panelTextColor: "'.self::GetOption('JS_PANEL_TEXT_COLOR').'",
-                        panelDescriptionColor: "'.self::GetOption('JS_PANEL_DESCRIPTION_COLOR').'",
-                        panelDescriptionIcon: "'.self::GetOption('JS_PANEL_DESCRIPTION_ICON').'",
-                        contentBgImage: "'.self::GetOption('JS_CONTENT_BG_IMAGE').'",
-                        contentColor: "'.self::GetOption('JS_CONTENT_COLOR').'",
-                        contentTitleColor: "'.self::GetOption('JS_CONTENT_TITLE_COLOR').'"
-                    }
-                };
-
-                window.onload = 
-                    function(){
-                        var s = (window.giftdOptions.tab && window.giftdOptions.tab.enabled) ? "giftd.js" : "giftd_no_tab.js";
-                        var el = document.createElement("script");
-                        el.id = "giftd-script";
-                        el.async = true;
-                        el.src = "https://static.giftd.ru/embedded/" + s;
-                        document.getElementsByTagName("head")[0].appendChild(el);
-                    };
+    public static function getJSTabScript()
+    {
+        return
+            '<script>' .
+            ((self::GetOption('JS_TAB_CUSTOMIZE') && self::GetOption('JS_TAB_IS_ACTIVE')) ? self::GetOption('JS_TAB_OPTIONS') : self::getDefaultJsOptions()) .
+            '
+            (function(){
+                var s = (window.giftdOptions.tab && window.giftdOptions.tab.enabled) ? "giftd.js" : "giftd_no_tab.js";
+                var el = document.createElement("script");
+                el.id = "giftd-script";
+                el.async = true;
+                el.src = "https://static.giftd.ru/embedded/" + s;
+                document.getElementsByTagName("head")[0].appendChild(el);
+            })();
             </script>';
-
-        return $script;
     }
 
     function MakeModuleOptionsHtml()
@@ -273,9 +264,9 @@ class GiftdHelper
         return $settings->ToHtml();
     }
 
-    function MakePanelOptionsHtml()
+    function MakeTabOptionsHtml()
     {
-        $settings = new GiftdPanelSettings(self::$MODULE_ID, new GenericHtmlBuilder());
+        $settings = new GiftdTabSettings(self::$MODULE_ID, new GenericHtmlBuilder());
         return $settings->ToHtml();
     }
 

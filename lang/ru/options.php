@@ -22,21 +22,13 @@ $MESS ["COMPONENT_TEMPLATE_HELP"] .= '<p>3. При использовании к
 $MESS ["COMPONENT_TEMPLATE_JS_COUPON_FIELD_ID_HELP"] = "Укажите параметр id вашего поля для ввода скидочных кодов, при изменении которого скрипт компонента <b>giftd:coupon_input</b> отправит запрос на проверку кода";
 $MESS ["COMPONENT_TEMPLATE_JS_CALLBACK_HELP"] = "Укажите имя вашей js-функии, которой будет передан результат проверки кода Giftd, после того как скрипт компонета <b>giftd:coupon_input</b> проверит введенный код";
 
-$MESS ["JS_PANEL_IS_ACTIVE"] = "Отображать на сайте графический блок Giftd";
+$MESS ["JS_TAB_IS_ACTIVE"] = "Отображать на сайте графический блок Giftd";
 $MESS ["JS_TAB_POSITION"] = "Местоположение вкладки Giftd";
 $MESS ["JS_TAB_POSITION_LEFT"] = "Слева";
 $MESS ["JS_TAB_POSITION_RIGHT"] = "Справа";
 $MESS ["JS_TAB_POSITION_BOTTOM"] = "Снизу";
-$MESS ["JS_PANEL_DECOR_IS_ACTIVE"] = "Настроить внешний вид вкладки Giftd";
-$MESS ["JS_TAB_PANEL_BG_COLOR"] = "Свойство вкладки tab.panelBg.color";
-$MESS ["JS_TAB_PANEL_BG_IMAGE"] = "Свойство вкладки tab.panelBg.image";
-$MESS ["JS_TAB_PANEL_DECOR_TOP"] = "Свойство вкладки tab.panelDecor.top";
-$MESS ["JS_TAB_PANEL_DECOR_BOTTOM"] = "Свойство вкладки tab.panelDecor.bottom";
-$MESS ["JS_PANEL_TEXT_COLOR"] = "Свойство вкладки tab.panelTextColor";
-$MESS ["JS_PANEL_DESCRIPTION_COLOR"] = "Свойство вкладки tab.panelDescriptionColor";
-$MESS ["JS_PANEL_DESCRIPTION_ICON"] = "Свойство вкладки tab.panelDescriptionIcon";
-$MESS ["JS_CONTENT_BG_IMAGE"] = "Свойство вкладки tab.contentBgImage";
-$MESS ["JS_CONTENT_COLOR"] = "Свойство вкладки tab.contentColor";
-$MESS ["JS_CONTENT_TITLE_COLOR"] = "Свойство вкладки tab.contentTitleColor";
+$MESS ["JS_TAB_CUSTOMIZE"] = "Настроить внешний вид графического блока Giftd";
+$MESS ["JS_TAB_OPTIONS"] = "JS-код с настройками графического блока Giftd";
 
-?>
+$MESS ["JS_TAB_OPTIONS_SYNTAX_ERROR"] = "Введенный код с настройками блока Giftd не является валидным JS";
+$MESS ["JS_TAB_OPTIONS_ERROR"] = "Введенный код с настройками блока Giftd невалиден: в нем либо не устанавливается window.giftdOptions, либо неверно устанавливается свойство window.giftdOptions.pid";

@@ -1,8 +1,8 @@
 <?
-if(!$USER->CanDoOperation('edit_other_settings'))
+if (!$USER->CanDoOperation('edit_other_settings'))
     $APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
-IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/options.php");
+IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"] . BX_ROOT . "/modules/main/options.php");
 IncludeModuleLangFile(__FILE__);
 
 $module_id = "giftd.coupon";
@@ -11,21 +11,19 @@ CModule::IncludeModule('fileman');
 
 $APPLICATION->AddHeadScript('https://yandex.st/jquery/2.0.3/jquery.min.js');
 
-if($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"].$_POST["Apply"].$_POST["RestoreDefaults"] <> ''  && check_bitrix_sessid())
-{
+if ($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"] . $_POST["Apply"] . $_POST["RestoreDefaults"] <> '' && check_bitrix_sessid()) {
 
-    if($_POST["RestoreDefaults"] <> '')
-    {
+    if ($_POST["RestoreDefaults"] <> '') {
         COption::RemoveOption($module_id);
-    }
-    else
-    {
+    } else {
         GiftdHelper::UpdateSettings($_POST);
     }
 }
 ?>
 
-<form method="post" name="giftd_settings" action="<?echo $APPLICATION->GetCurPage()?>?mid=<?=urlencode($module_id)?>&lang=<?=urlencode(LANGUAGE_ID)?>" enctype="multipart/form-data">
+<form method="post" name="giftd_settings"
+      action="<? echo $APPLICATION->GetCurPage() ?>?mid=<?= urlencode($module_id) ?>&lang=<?= urlencode(LANGUAGE_ID) ?>"
+      enctype="multipart/form-data">
     <?
     $aTabs = array(
         array("DIV" => "edit1", "TAB" => GetMessage("MAIN_TAB_SET"), "ICON" => "", "TITLE" => GetMessage("MAIN_TAB_TITLE_SET")),
@@ -37,26 +35,32 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"].$_POST["Apply"].$_PO
 
     echo GiftdHelper::MakeModuleOptionsHtml();
 
-    if(GiftdHelper::IsSetModuleSettings())
-    {
+    if (GiftdHelper::IsSetModuleSettings()) {
         echo GiftdHelper::MakeComponentOptionsHtml();
-        echo GiftdHelper::MakePanelOptionsHtml();
+        echo GiftdHelper::MakeTabOptionsHtml();
     }
     ?>
 
-    <?$tabControl->Buttons();?>
-    <input type="hidden" name="siteTabControl_active_tab" value="<?=htmlspecialcharsbx($_REQUEST["siteTabControl_active_tab"])?>">
-    <?if($_REQUEST["back_url_settings"] <> ''):?>
-        <input type="submit" name="Update" value="<?=GetMessage("MAIN_SAVE")?>" title="<?=GetMessage("MAIN_OPT_SAVE_TITLE")?>">
-    <?endif?>
-    <input type="submit" name="Apply" value="<?=GetMessage("MAIN_OPT_APPLY")?>" title="<?=GetMessage("MAIN_OPT_APPLY_TITLE")?>">
-    <?if($_REQUEST["back_url_settings"] <> ''):?>
-        <input type="button" name="Cancel" value="<?=GetMessage("MAIN_OPT_CANCEL")?>" title="<?=GetMessage("MAIN_OPT_CANCEL_TITLE")?>" onclick="window.location='<?echo htmlspecialcharsbx(CUtil::addslashes($_REQUEST["back_url_settings"]))?>'">
-        <input type="hidden" name="back_url_settings" value="<?=htmlspecialcharsbx($_REQUEST["back_url_settings"])?>">
-    <?endif?>
-    <input type="submit" name="RestoreDefaults" title="<?echo GetMessage("MAIN_HINT_RESTORE_DEFAULTS")?>" onclick="return confirm('<?echo AddSlashes(GetMessage("MAIN_HINT_RESTORE_DEFAULTS_WARNING"))?>')" value="<?echo GetMessage("MAIN_RESTORE_DEFAULTS")?>">
-    <?=bitrix_sessid_post();?>
-    <?$tabControl->End();?>
+    <? $tabControl->Buttons(); ?>
+    <input type="hidden" name="siteTabControl_active_tab"
+           value="<?= htmlspecialcharsbx($_REQUEST["siteTabControl_active_tab"]) ?>">
+    <? if ($_REQUEST["back_url_settings"] <> ''): ?>
+        <input type="submit" name="Update" value="<?= GetMessage("MAIN_SAVE") ?>"
+               title="<?= GetMessage("MAIN_OPT_SAVE_TITLE") ?>">
+    <? endif ?>
+    <input type="submit" name="Apply" value="<?= GetMessage("MAIN_OPT_APPLY") ?>"
+           title="<?= GetMessage("MAIN_OPT_APPLY_TITLE") ?>">
+    <? if ($_REQUEST["back_url_settings"] <> ''): ?>
+        <input type="button" name="Cancel" value="<?= GetMessage("MAIN_OPT_CANCEL") ?>"
+               title="<?= GetMessage("MAIN_OPT_CANCEL_TITLE") ?>"
+               onclick="window.location='<? echo htmlspecialcharsbx(CUtil::addslashes($_REQUEST["back_url_settings"])) ?>'">
+        <input type="hidden" name="back_url_settings" value="<?= htmlspecialcharsbx($_REQUEST["back_url_settings"]) ?>">
+    <? endif ?>
+    <input type="submit" name="RestoreDefaults" title="<? echo GetMessage("MAIN_HINT_RESTORE_DEFAULTS") ?>"
+           onclick="return confirm('<? echo AddSlashes(GetMessage("MAIN_HINT_RESTORE_DEFAULTS_WARNING")) ?>')"
+           value="<? echo GetMessage("MAIN_RESTORE_DEFAULTS") ?>">
+    <?= bitrix_sessid_post(); ?>
+    <? $tabControl->End(); ?>
 </form>
 
 <script language="JavaScript">
@@ -80,20 +84,17 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"].$_POST["Apply"].$_PO
         popup = window.open(options.url, 'giftd_auth_' + new Date().getTime(), features);
     }
 
-    function update_api_key(user_id, api_key)
-    {
+    function update_api_key(user_id, api_key) {
         $('input[name=API_KEY]').val(api_key);
         $('input[name=USER_ID]').val(user_id);
         $('form[name=giftd_settings] input[name=Apply]').click();
     }
 
-    $(function(){
+    $(function () {
         $(window).on('message', function (message) {
             var rawMessage = message.data || message.originalEvent.data;
-            console.log(rawMessage);
             if (typeof rawMessage == 'string' && rawMessage.indexOf("giftd/auth") === 0) {
                 var message = JSON.parse(rawMessage.split("~", 2)[1]);
-                console.log(message);
                 switch (message.type) {
                     case 'error':
                         alert(message.data);
@@ -109,8 +110,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"].$_POST["Apply"].$_PO
         });
     });
 
-    $(function(){
-        $('#SIGN_IN').click(function(){
+    $(function () {
+        $('#SIGN_IN').click(function () {
             openWindow({
                 width: 520,
                 height: 453,
@@ -120,69 +121,72 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"].$_POST["Apply"].$_PO
         });
     });
 
-    function UpdateComponentSettings()
-    {
-        if($('input[name=COMPONENT_IS_ACTIVE]').prop('checked'))
+    function UpdateComponentSettings() {
+        if ($('input[name=COMPONENT_IS_ACTIVE]').prop('checked'))
             $('tr.component_field').show();
         else
             $('tr.component_field').hide();
     }
 
-    function UpdateComponentTemplateSettings()
-    {
+    function UpdateComponentTemplateSettings() {
         var items = $('tr.template_field');
-        if($('select[name=COMPONENT_TEMPLATE]').val() != 'PHP')
+        if ($('select[name=COMPONENT_TEMPLATE]').val() != 'PHP')
             $('tr.template_field').show();
         else
             $('tr.template_field').hide();
     }
 
-    function UpdatePanelSettings()
-    {
-        if($('input[name=JS_PANEL_IS_ACTIVE').prop('checked')) {
-            $('tr.panel_field').show();
-            $('tr.panel_field').find('input').prop('disabled', false);
-        } else {
-            $('tr.panel_field').hide();
-            $('tr.panel_field').find('input').prop('disabled', true);
-        }
+    function UpdateTabSettings() {
+        var checked = $('input[name=JS_TAB_IS_ACTIVE').is(':checked');
+        $('tr.tab_field input').prop('disabled', !checked);
+        $('tr.tab_field').toggle(checked);
+        $('tr.tab_disabled_field').toggle(!checked);
     }
 
-    function UpdatePanelDecorSettings()
-    {
-        if($('input[name=JS_PANEL_DECOR_IS_ACTIVE').prop('checked')) {
-            $('tr.panel_decor_field').show();
-            $('tr.panel_decor_field').find('input').prop('disabled', false);
-        } else {
-            $('tr.panel_decor_field').hide();
-            $('tr.panel_decor_field').find('input').prop('disabled', true);
-        }
-
+    function UpdateTabCustomizeSettings() {
+        var checked = $('input[name=JS_TAB_CUSTOMIZE').is(':checked');
+        $('tr.tab_customize_field input, tr.tab_customize_field textarea').prop('disabled', !checked);
+        $('tr.tab_customize_field').toggle(checked);
     }
 
-
-    $(function(){
+    $(function () {
 
         $('input[name=COMPONENT_IS_ACTIVE').click(UpdateComponentSettings);
         $('select[name=COMPONENT_TEMPLATE]').change(UpdateComponentTemplateSettings);
-        $('input[name=JS_PANEL_IS_ACTIVE').click(UpdatePanelSettings);
-        $('input[name=JS_PANEL_DECOR_IS_ACTIVE').click(UpdatePanelDecorSettings);
+        $('input[name=JS_TAB_IS_ACTIVE').change(UpdateTabSettings);
+        $('input[name=JS_TAB_CUSTOMIZE').change(UpdateTabCustomizeSettings);
 
         UpdateComponentTemplateSettings();
-        UpdatePanelSettings();
+        UpdateTabSettings();
         UpdateComponentSettings();
-        UpdatePanelDecorSettings();
+        UpdateTabCustomizeSettings();
 
-        /*
-        if($('[name=COMPONENT_IS_ACTIVE]').prop('checked') == false)
-            $('tr.component_field').hide();
+        function validateJsTabOptions() {
+            var code = $('[name=JS_TAB_OPTIONS]').val();
+            var result = true;
+            try {
+                eval(code);
+            } catch (e) {
+                result = false;
+            }
+            if (!result) {
+                alert("<?php echo GetMessage('JS_TAB_OPTIONS_SYNTAX_ERROR') ?>");
+                return false;
+            }
+            if (!window.giftdOptions || window.giftdOptions.pid != $('[name=PARTNER_CODE]').val()) {
+                alert("<?php echo GetMessage('JS_TAB_OPTIONS_ERROR') ?>");
+                return false;
+            }
+            return true;
+        }
 
-        if($('select[name=COMPONENT_TEMPLATE]').val() == 'PHP')
-            $('tr.template_field').hide();
 
-        if($('[name=JS_PANEL_IS_ACTIVE]').prop('checked') == false)
-            $('tr.panel_field').hide();
-        */
+        $('[name=Apply]').click(function(){
+            if (!validateJsTabOptions()) {
+                document.location.reload();
+                return false;
+            }
+        });
     });
 
 </script>

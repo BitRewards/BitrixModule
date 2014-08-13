@@ -34,6 +34,11 @@ class GenericHtmlBuilder implements IHtmlBuilder
         return $html;
     }
 
+    public function GenericTextareaField($name, $value, $default = null)
+    {
+        return "<textarea name='$name'>" . str_replace(" ", "&nbsp;", htmlspecialcharsbx($value ?: $default)) . "</textarea>";
+    }
+
     public function GenericInputCheckboxField($name, $value, $title, $isChecked)
     {
         $html = $title.' <input type="checkbox" name="'.$name.'" value="'.$value.'" '.($isChecked ? 'checked' : '').'>';
@@ -60,7 +65,7 @@ class GenericHtmlBuilder implements IHtmlBuilder
     {
         $html = '<select name="'.$name.'">';
         foreach($values as $title=>$value) {
-            $title = strlen(GetMessage($title)) > 0 ? GetMessage($title) : $title; //hack because of select options in giftd_component_settings
+            $title = GetMessage($title) ?: $title; //hack because of select options in giftd_component_settings
             $html.= ' <option value="'.$value.'" '.($selectedValue === $value ? 'selected' : '').'>'.$title.'</option>';
         }
         $html .= '</select>';

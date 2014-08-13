@@ -14,21 +14,14 @@ $MESS ["COMPONENT_IS_ACTIVE"] = "Activity";
 $MESS ["COMPONENT_TEMPLATE"] = "Component template";
 $MESS ["COMPONENT_TEMPLATE_JS_COUPON_FIELD_ID"] = "HTML coupon input's filed ID";
 $MESS ["COMPONENT_TEMPLATE_JS_CALLBACK"] = "Coupon validation event handler (javascript)";
-
-$MESS ['JS_PANEL_SETTINGS'] = "Giftd's window";
-$MESS ["JS_PANEL_IS_ACTIVE"] = "Show Giftd panel";
-$MESS ["JS_TAB_POSITION"] = "Panel position";
+$MESS ["JS_TAB_CUSTOMIZE"] = "Customize Giftd tab";
+$MESS ["JS_TAB_OPTIONS"] = "JS code for Giftd tab";
+$MESS ['JS_TAB_SETTINGS'] = "Giftd's window";
+$MESS ["JS_TAB_IS_ACTIVE"] = "Show Giftd tab";
+$MESS ["JS_TAB_POSITION"] = "Tab position";
 $MESS ["JS_TAB_POSITION_LEFT"] = "Left";
 $MESS ["JS_TAB_POSITION_RIGHT"] = "Right";
 $MESS ["JS_TAB_POSITION_BOTTOM"] = "Bottom";
-$MESS ["JS_TAB_PANEL_BG_COLOR"] = "Property of tab.panelBg.color";
-$MESS ["JS_TAB_PANEL_BG_IMAGE"] = "Property of tab.panelBg.image";
-$MESS ["JS_TAB_PANEL_DECOR_TOP"] = "Property of tab.panelDecor.top";
-$MESS ["JS_TAB_PANEL_DECOR_BOTTOM"] = "Property of tab.panelDecor.bottom";
-$MESS ["JS_PANEL_TEXT_COLOR"] = "Property of tab.panelTextColor";
-$MESS ["JS_PANEL_DESCRIPTION_COLOR"] = "Property of tab.panelDescriptionColor";
-$MESS ["JS_PANEL_DESCRIPTION_ICON"] = "Property of tab.panelDescriptionIcon";
-$MESS ["JS_CONTENT_BG_IMAGE"] = "Property of tab.contentBgImage";
-$MESS ["JS_CONTENT_COLOR"] = "Property of tab.contentColor";
-$MESS ["JS_CONTENT_TITLE_COLOR"] = "Property of tab.contentTitleColor";
-?>
+
+$MESS ["JS_TAB_OPTIONS_SYNTAX_ERROR"] = "JS code with Giftd tab settings is invalid";
+$MESS ["JS_TAB_OPTIONS_ERROR"] = "JS code with Giftd tab settings is invalid: either window.giftdOptions or window.giftdOptions.pid contains wrong value";
