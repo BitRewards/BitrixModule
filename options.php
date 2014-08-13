@@ -162,7 +162,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"] . $_POST["Apply"] .
         UpdateTabCustomizeSettings();
 
         function validateJsTabOptions() {
-            var code = $('[name=JS_TAB_OPTIONS]').val();
+            var $options = $('[name=JS_TAB_OPTIONS]');
+            if (!$options.is(':visible')) {
+                return true;
+            }
+            var code = $options.val();
             var result = true;
             try {
                 eval(code);

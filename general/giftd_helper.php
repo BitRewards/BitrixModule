@@ -132,10 +132,17 @@ class GiftdHelper
 
     private static function _getSiteData()
     {
-        global $USER, $arModuleVersion;
+        global $USER;
 
         $schema = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? 'https' : 'http';
         $host = (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : $_SERVER['SERVER_NAME']);
+        if (count($hostParts = explode(":", $host)) > 1) {
+            $port = $hostParts[1];
+            if ($port == 80 || $port == 443) {
+                $host = $hostParts[0];
+            }
+        }
+        $url = SITE_SERVER_NAME ?: ("$schema://$host");
 
         $siteData = CSite::GetByID(SITE_ID)->Fetch();
         $userData = isset($USER) ? $USER->GetByID($USER->GetId())->Fetch() : null;
@@ -144,9 +151,9 @@ class GiftdHelper
             'email' => isset($USER) ? $USER->GetEmail() ?: COption::GetOptionString("main", "email_from") : null,
             'phone' => $userData ? (isset($userData['PERSONAL_PHONE']) ? $userData['PERSONAL_PHONE'] : $userData['WORK_PHONE']) : null,
             'name' => isset($USER) ? $USER->GetFullName() : null,
-            'url' => $schema . '://'. $host . '/',
+            'url' => $url,
             'title' => isset($siteData['SITE_NAME']) ? $siteData['SITE_NAME'] : null,
-            'bitrix_module_version' => isset($arModuleVersion) ? $arModuleVersion["VERSION"] : null,
+            'bitrix_module_version' => SM_VERSION,
         );
     }
 
@@ -165,11 +172,20 @@ class GiftdHelper
         if(!isset($values['JS_TAB_CUSTOMIZE']))
             $values['JS_TAB_CUSTOMIZE'] = null;
 
+        $component_settings = new GiftdComponentSettings(self::$MODULE_ID, new GenericHtmlBuilder());
+        $tab_settings = new GiftdTabSettings(self::$MODULE_ID, new GenericHtmlBuilder());
+
+        $component_settings->Update($values);
+        $tab_settings->Update($values);
+
         $api_key = $values['API_KEY'];
         $user_id = $values['USER_ID'];
         if ($values['API_KEY'] != ($api_key_old = self::GetOption('API_KEY')) &&
             $values['USER_ID'] != ($user_id_old = self::GetOption('USER_ID'))) {
-            static::handleUninstall($api_key_old, $user_id_old);
+
+            if ($api_key_old && $user_id_old) {
+                static::handleUninstall($api_key_old, $user_id_old);
+            }
 
             if (!empty($api_key) && !empty($user_id)) {
                 $client = new GiftdClient($values['USER_ID'], $values['API_KEY']);
@@ -182,7 +198,7 @@ class GiftdHelper
                     $partnerCodeOld = self::GetOption('PARTNER_CODE');
 
                     self::SetOption('API_KEY', $values['API_KEY']);
-                    self::SetOption('USER_ID', $values['API_KEY']);
+                    self::SetOption('USER_ID', $values['USER_ID']);
                     self::SetOption('PARTNER_CODE', $response['data']['partner_code']);
                     self::SetOption('PARTNER_TOKEN_PREFIX', $response['data']['partner_token_prefix']);
 
@@ -201,11 +217,7 @@ class GiftdHelper
             }
         }
 
-        $component_settings = new GiftdComponentSettings(self::$MODULE_ID, new GenericHtmlBuilder());
-        $tab_settings = new GiftdTabSettings(self::$MODULE_ID, new GenericHtmlBuilder());
 
-        $component_settings->Update($values);
-        $tab_settings->Update($values);
     }
 
     public static function getDefaultJsOptions()
