@@ -115,7 +115,7 @@ class GiftdHelper
 
     public static function handleUninstall($api_key, $user_id)
     {
-        $client = new GiftdClient($api_key, $user_id);
+        $client = new GiftdClient($user_id, $api_key);
         try {
             $client->query('bitrix/uninstall', static::_getSiteData());
         } catch (Exception $e) {
@@ -135,14 +135,15 @@ class GiftdHelper
         global $USER;
 
         $schema = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? 'https' : 'http';
-        $host = (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : $_SERVER['SERVER_NAME']);
+
+        $host = SITE_SERVER_NAME ?: (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : $_SERVER['SERVER_NAME']);
         if (count($hostParts = explode(":", $host)) > 1) {
             $port = $hostParts[1];
             if ($port == 80 || $port == 443) {
                 $host = $hostParts[0];
             }
         }
-        $url = SITE_SERVER_NAME ?: ("$schema://$host");
+        $url = "$schema://$host";
 
         $siteData = CSite::GetByID(SITE_ID)->Fetch();
         $userData = isset($USER) ? $USER->GetByID($USER->GetId())->Fetch() : null;
@@ -180,6 +181,7 @@ class GiftdHelper
 
         $api_key = $values['API_KEY'];
         $user_id = $values['USER_ID'];
+
         if ($values['API_KEY'] != ($api_key_old = self::GetOption('API_KEY')) &&
             $values['USER_ID'] != ($user_id_old = self::GetOption('USER_ID'))) {
 
