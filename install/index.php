@@ -1,4 +1,5 @@
-<?
+<?php
+
 global $MESS;
 $strPath2Lang = str_replace("\\", "/", __FILE__);
 $strPath2Lang = substr($strPath2Lang, 0, strlen($strPath2Lang)-strlen("/install/index.php"));
@@ -26,6 +27,8 @@ Class giftd_coupon extends CModule
 
 		$this->MODULE_NAME = GetMessage("MODULE_NAME");
 		$this->MODULE_DESCRIPTION = GetMessage("MODULE_DESCRIPTION");
+        $this->PARTNER_NAME = "Giftd";
+        $this->PARTNER_URI = "https://partner.giftd.ru";
     }
 
 
