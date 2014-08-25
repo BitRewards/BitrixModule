@@ -127,14 +127,15 @@ class GiftdDiscountManager
             foreach(CCatalogDiscount::GetCoupons() as $coupon)
             {
                 $card = self::GetGiftdCouponCard($coupon);
-                if($card && $card->token_status == Giftd_Card::TOKEN_STATUS_OK)
-                {
+                if ($card) {
                     try {
                         self::$_client->charge($coupon, $card->amount_available, $arFields['PRICE'], CSaleBasket::GetBasketUserID().'_'.$arFields['PRICE']);
                         break;
                     }
                     catch (Giftd_Exception $e) {
-                        // KK: и что тут делать?
+                        return false;
+                    } catch (Giftd_NetworkException $e) {
+                        return false;
                     }
                 }
             }
@@ -142,6 +143,9 @@ class GiftdDiscountManager
         return true;
     }
 
-}
+    public static function AdjustPriceOnGetOptimalPrice($intProductID, $quantity = 1, $arUserGroups = array(), $renewal = "N", $arPrices = array(), $siteID = false, $arDiscountCoupons = false)
+    {
 
-?>
+    }
+
+}

@@ -35,6 +35,7 @@ Class giftd_coupon extends CModule
         RegisterModuleDependences('main', 'OnBeforeProlog', $this->MODULE_ID, 'GiftdHelper', 'CheckPatchOnBeforeProlog');
         RegisterModuleDependences('main', 'OnBeforeProlog', $this->MODULE_ID, 'GiftdHelper', 'InjectJSTabScriptOnBeforeProlog');
         RegisterModuleDependences('sale', 'OnBeforeOrderAdd', $this->MODULE_ID, 'GiftdDiscountManager', 'ChargeCouponOnBeforeOrderAdd');
+        RegisterModuleDependences('catalog', 'OnGetOptimalPrice', $this->MODULE_ID, 'GiftdDiscountManager', 'AdjustPriceOnGetOptimalPrice');
 
         return true;
 	}
@@ -44,6 +45,7 @@ Class giftd_coupon extends CModule
         UnRegisterModuleDependences('main', 'OnBeforeProlog', $this->MODULE_ID, 'GiftdHelper', 'CheckPatchOnBeforeProlog');
         UnRegisterModuleDependences('main', 'OnBeforeProlog', $this->MODULE_ID, 'GiftdHelper', 'InjectJSTabScriptOnBeforeProlog');
         UnRegisterModuleDependences('sale', 'OnBeforeOrderAdd', $this->MODULE_ID, 'GiftdDiscountManager', 'ChargeCouponOnBeforeOrderAdd');
+        UnRegisterModuleDependences('catalog', 'OnGetOptimalPrice', $this->MODULE_ID, 'GiftdDiscountManager', 'AdjustPriceOnGetOptimalPrice');
         UnRegisterModule($this->MODULE_ID);
 
 		return true;
