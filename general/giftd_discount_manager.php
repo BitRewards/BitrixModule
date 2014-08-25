@@ -145,7 +145,26 @@ class GiftdDiscountManager
 
     public static function AdjustPriceOnGetOptimalPrice($intProductID, $quantity = 1, $arUserGroups = array(), $renewal = "N", $arPrices = array(), $siteID = false, $arDiscountCoupons = false)
     {
-
+        if ($quantity > 1) {
+            $result = CAllCatalogProduct::GetOptimalPrice($intProductID, 1, $arUserGroups, $renewal, $arPrices, $siteID, $arDiscountCoupons);
+            if (isset($result['DISCOUNT_PRICE']) && isset($result['DISCOUNT']['NAME']) && isset($result['PRICE']['PRICE'])) {
+                if (stripos($result['DISCOUNT']['NAME'], 'giftd') !== false) {
+                    $discountValue = doubleval($result['DISCOUNT']['VALUE']);
+                    $singleItemDiscountValue = floor(($discountValue / $quantity) * 100) / 100;
+                    $result['DISCOUNT_PRICE'] = $result['PRICE']['PRICE'] - $singleItemDiscountValue;
+                    $result['DISCOUNT']['DISCOUNT_CONVERT'] = $singleItemDiscountValue;
+                    $result['DISCOUNT']['VALUE'] = $singleItemDiscountValue;
+                    foreach ($result['DISCOUNT_LIST'] as &$discountItem) {
+                        if (stripos($discountItem['NAME'], 'giftd') !== false) {
+                            $discountItem['DISCOUNT_CONVERT'] = $singleItemDiscountValue;
+                            $discountItem['VALUE'] = $singleItemDiscountValue;
+                        }
+                    }
+                    return $result;
+                }
+            }
+        }
+        return true;
     }
 
 }
