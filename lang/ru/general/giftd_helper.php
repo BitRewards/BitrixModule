@@ -6,4 +6,3 @@ $MESS ['COMPONENT_TEMPLATE_TYPE_HTML'] = 'Серверный обработчи�
 $MESS['JS_TAB_POSITION_TOP'] = 'Сверху';
 $MESS['JS_TAB_POSITION_LEFT'] = 'Слева';
 $MESS['JS_TAB_POSITION_BOTTOM'] = 'Внизу';
-?>

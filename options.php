@@ -63,105 +63,58 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"] . $_POST["Apply"] .
     <? $tabControl->End(); ?>
 </form>
 
-<script language="JavaScript">
-    var popup = null;
-    function openWindow(options) {
-        var
-            screenX = typeof window.screenX != 'undefined' ? window.screenX : window.screenLeft,
-            screenY = typeof window.screenY != 'undefined' ? window.screenY : window.screenTop,
-            outerWidth = typeof window.outerWidth != 'undefined' ? window.outerWidth : document.body.clientWidth,
-            outerHeight = typeof window.outerHeight != 'undefined' ? window.outerHeight : (document.body.clientHeight - 22),
-            width = options.width,
-            height = options.height,
-            left = parseInt(screenX + ((outerWidth - width) / 2), 10),
-            top = parseInt(screenY + ((outerHeight - height) / 2.5), 10),
-            features = (
-                'width=' + width +
-                    ',height=' + height +
-                    ',left=' + left +
-                    ',top=' + top
-                );
-        popup = window.open(options.url, 'giftd_auth_' + new Date().getTime(), features);
-    }
-
-    function update_api_key(user_id, api_key) {
-        $('input[name=API_KEY]').val(api_key);
-        $('input[name=USER_ID]').val(user_id);
-        $('form[name=giftd_settings] input[name=Apply]').click();
-    }
-
-    $(function () {
-        $(window).on('message', function (message) {
-            var rawMessage = message.data || message.originalEvent.data;
-            if (typeof rawMessage == 'string' && rawMessage.indexOf("giftd/auth") === 0) {
-                var message = JSON.parse(rawMessage.split("~", 2)[1]);
-                switch (message.type) {
-                    case 'error':
-                        alert(message.data);
-                        break;
-                    case 'data':
-                        update_api_key(message.data.user_id, message.data.api_key);
-                        break;
-                    default:
-                        break;
-                }
+<script>
+    var Giftd = {
+        popup: null,
+        openWindow: function(options) {
+            var
+                screenX = typeof window.screenX != 'undefined' ? window.screenX : window.screenLeft,
+                screenY = typeof window.screenY != 'undefined' ? window.screenY : window.screenTop,
+                outerWidth = typeof window.outerWidth != 'undefined' ? window.outerWidth : document.body.clientWidth,
+                outerHeight = typeof window.outerHeight != 'undefined' ? window.outerHeight : (document.body.clientHeight - 22),
+                width = options.width,
+                height = options.height,
+                left = parseInt(screenX + ((outerWidth - width) / 2), 10),
+                top = parseInt(screenY + ((outerHeight - height) / 2.5), 10),
+                features = (
+                    'width=' + width +
+                        ',height=' + height +
+                        ',left=' + left +
+                        ',top=' + top
+                    );
+            Giftd.popup = window.open(options.url, 'giftd_auth_' + new Date().getTime(), features);
+        },
+        updateApiKey: function(user_id, api_key) {
+            $('input[name=API_KEY]').val(api_key);
+            $('input[name=USER_ID]').val(user_id);
+            $('form[name=giftd_settings] input[name=Apply]').click();
+        },
+        updateComponentSettings: function() {
+            if ($('input[name=COMPONENT_IS_ACTIVE]').prop('checked'))
+                $('tr.component_field').show();
+            else
+                $('tr.component_field').hide();
+        },
+        updateComponentTemplateSettings: function(){
+            var items = $('tr.template_field');
+            if ($('select[name=COMPONENT_TEMPLATE]').val() != 'PHP') {
+                $('tr.template_field').show();
+            } else {
+                $('tr.template_field').hide();
             }
-            popup.close();
-        });
-    });
-
-    $(function () {
-        $('#SIGN_IN').click(function () {
-            openWindow({
-                width: 520,
-                height: 453,
-                url: this.href
-            });
-            return false;
-        });
-    });
-
-    function UpdateComponentSettings() {
-        if ($('input[name=COMPONENT_IS_ACTIVE]').prop('checked'))
-            $('tr.component_field').show();
-        else
-            $('tr.component_field').hide();
-    }
-
-    function UpdateComponentTemplateSettings() {
-        var items = $('tr.template_field');
-        if ($('select[name=COMPONENT_TEMPLATE]').val() != 'PHP')
-            $('tr.template_field').show();
-        else
-            $('tr.template_field').hide();
-    }
-
-    function UpdateTabSettings() {
-        var checked = $('input[name=JS_TAB_IS_ACTIVE').is(':checked');
-        $('tr.tab_field input').prop('disabled', !checked);
-        $('tr.tab_field').toggle(checked);
-        $('tr.tab_disabled_field').toggle(!checked);
-    }
-
-    function UpdateTabCustomizeSettings() {
-        var checked = $('input[name=JS_TAB_CUSTOMIZE').is(':checked');
-        $('tr.tab_customize_field input, tr.tab_customize_field textarea').prop('disabled', !checked);
-        $('tr.tab_customize_field').toggle(checked);
-    }
-
-    $(function () {
-
-        $('input[name=COMPONENT_IS_ACTIVE').click(UpdateComponentSettings);
-        $('select[name=COMPONENT_TEMPLATE]').change(UpdateComponentTemplateSettings);
-        $('input[name=JS_TAB_IS_ACTIVE').change(UpdateTabSettings);
-        $('input[name=JS_TAB_CUSTOMIZE').change(UpdateTabCustomizeSettings);
-
-        UpdateComponentTemplateSettings();
-        UpdateTabSettings();
-        UpdateComponentSettings();
-        UpdateTabCustomizeSettings();
-
-        function validateJsTabOptions() {
+        },
+        updateTabSettings: function(){
+            var checked = $('input[name=JS_TAB_IS_ACTIVE').is(':checked');
+            $('tr.tab_field input').prop('disabled', !checked);
+            $('tr.tab_field').toggle(checked);
+            $('tr.tab_disabled_field').toggle(!checked);
+        },
+        updateTabCustomizeSettings: function(){
+            var checked = $('input[name=JS_TAB_CUSTOMIZE').is(':checked');
+            $('tr.tab_customize_field input, tr.tab_customize_field textarea').prop('disabled', !checked);
+            $('tr.tab_customize_field').toggle(checked);
+        },
+        validateJsTabOptions: function(){
             var $options = $('[name=JS_TAB_OPTIONS]');
             if (!$options.is(':visible')) {
                 return true;
@@ -183,14 +136,53 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"] . $_POST["Apply"] .
             }
             return true;
         }
+    };
 
+    $(function () {
+        $(window).on('message', function (message) {
+            var rawMessage = message.data || message.originalEvent.data;
+            if (typeof rawMessage == 'string' && rawMessage.indexOf("giftd/auth") === 0) {
+                var message = JSON.parse(rawMessage.split("~", 2)[1]);
+                switch (message.type) {
+                    case 'error':
+                        alert(message.data);
+                        break;
+                    case 'data':
+                        Giftd.updateApiKey(message.data.user_id, message.data.api_key);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            Giftd.popup.close();
+        });
+
+        $('#SIGN_IN').click(function () {
+            Giftd.openWindow({
+                width: 520,
+                height: 453,
+                url: this.href
+            });
+            return false;
+        });
+
+        $('input[name=COMPONENT_IS_ACTIVE').click(Giftd.updateComponentSettings);
+        $('select[name=COMPONENT_TEMPLATE]').change(Giftd.updateComponentTemplateSettings);
+        $('input[name=JS_TAB_IS_ACTIVE').change(Giftd.updateTabSettings);
+        $('input[name=JS_TAB_CUSTOMIZE').change(Giftd.updateTabCustomizeSettings);
+
+        Giftd.updateComponentTemplateSettings();
+        Giftd.updateTabSettings();
+        Giftd.updateComponentSettings();
+        Giftd.updateTabCustomizeSettings();
 
         $('[name=Apply]').click(function(){
-            if (!validateJsTabOptions()) {
+            if (!Giftd.validateJsTabOptions()) {
                 document.location.reload();
                 return false;
             }
         });
     });
+
 
 </script>

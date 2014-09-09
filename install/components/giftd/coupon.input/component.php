@@ -26,11 +26,11 @@ if (!CModule::IncludeModule($module_id))
     <?if($type <> ''):?>
     <script type="text/javascript">
 
-        <?if($coupon_validation_callback <> ''):?>
-        var validation_callback = '<?$coupon_validation_callback?>';
-        <?endif;?>
+        <?php if($coupon_validation_callback) { ?>
+            var giftd_validation_callback = '<?php echo $coupon_validation_callback?>';
+        <?php } ?>
 
-        function validate_coupon_giftd(){
+        function giftd_validate_coupon(){
             BX.ajax({
                 url: '<?=$ajax_rul?>',
                 data: {'coupon': this.value},
@@ -46,9 +46,9 @@ if (!CModule::IncludeModule($module_id))
                 onsuccess: function(data){
                     console.log(data);
 
-                    if(typeof window[validation_callback] === 'function')
+                    if(typeof window[giftd_validation_callback] === 'function')
                     {
-                        var callback = window[validation_callback];
+                        var callback = window[giftd_validation_callback];
                         callback(data);
                     }
                 },
@@ -58,14 +58,13 @@ if (!CModule::IncludeModule($module_id))
             });
         }
 
-        var coupon_field = document.getElementById('<?=$coupon_filed_id?>');
-        if(coupon_field)
-        {
-            coupon_field.onchange = validate_coupon_giftd;
+        var giftd_coupon_field = document.getElementById('<?=$coupon_filed_id?>');
+
+        if (giftd_coupon_field) {
+            giftd_coupon_field.onchange = giftd_validate_coupon;
         }
 
     </script>
 <?endif;?>
 
 <?endif;?>
-
