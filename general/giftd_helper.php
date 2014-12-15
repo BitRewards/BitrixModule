@@ -255,10 +255,11 @@ class GiftdHelper
     {
         $has_options_set = self::IsSetModuleSettings();
         $autoconfig = $has_options_set ? '' : '<a id="SIGN_IN" href="https://partner.giftd.ru/site/login?popup=1">'.GetMessage('SIGN_IN').'</a>';
-        $style = $has_options_set ? '' : ' style="display:none;" ';
+
+        // making all fields visible
+        // $style = $has_options_set ? '' : ' style="display:none;" ';
+        $style = '';
         $disabled_fields = array('PARTNER_CODE', 'PARTNER_TOKEN_PREFIX');
-
-
 
         $html = '<tr class="heading"><td colspan="2">'. ($autoconfig ?: GetMessage('MODULE_API_SETTINGS')) .'</td></tr>';
         foreach(self::$API_OPTIONS as $key) {
