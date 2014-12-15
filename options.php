@@ -9,8 +9,6 @@ $module_id = "giftd.coupon";
 CModule::IncludeModule($module_id);
 CModule::IncludeModule('fileman');
 
-$APPLICATION->AddHeadScript('https://yandex.st/jquery/2.0.3/jquery.min.js');
-
 if ($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"] . $_POST["Apply"] . $_POST["RestoreDefaults"] <> '' && check_bitrix_sessid()) {
 
     if ($_POST["RestoreDefaults"] <> '') {
@@ -186,3 +184,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"] . $_POST["Apply"] .
 
 
 </script>
+
+<script src="//yastatic.net/jquery/2.1.1/jquery.min.js"></script>
+
