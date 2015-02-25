@@ -30,16 +30,13 @@ class GiftdClient
             CURLOPT_POST => 1,
             CURLOPT_POSTFIELDS => $params,
             CURLOPT_RETURNTRANSFER => 1,
+            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_SSL_VERIFYPEER => 0,
+            CURLOPT_SSL_CIPHER_LIST => "rsa_rc4_128_sha"
         ));
-        if (defined('DEBUG') && DEBUG) {
-            curl_setopt_array($ch, array(
-                CURLOPT_SSL_VERIFYHOST => 0,
-                CURLOPT_SSL_VERIFYPEER => 0,
-            ));
-        }
         $result = curl_exec($ch);
         if (curl_errno($ch)) {
-            throw new Giftd_NetworkException(curl_error($ch));
+            throw new Giftd_NetworkException(curl_error($ch), curl_errno($ch));
         }
         return $result;
     }

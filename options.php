@@ -35,7 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"] . $_POST["Apply"] .
 
     if (GiftdHelper::IsSetModuleSettings()) {
         echo GiftdHelper::MakeComponentOptionsHtml();
-        echo GiftdHelper::MakeTabOptionsHtml();
+        //echo GiftdHelper::MakeTabOptionsHtml();
     }
     ?>
 
@@ -60,6 +60,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"] . $_POST["Apply"] .
     <?= bitrix_sessid_post(); ?>
     <? $tabControl->End(); ?>
 </form>
+
+
+<script src="//yastatic.net/jquery/2.1.1/jquery.min.js"></script>
+
 
 <script>
     var Giftd = {
@@ -184,6 +188,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"] . $_POST["Apply"] .
 
 
 </script>
-
-<script src="//yastatic.net/jquery/2.1.1/jquery.min.js"></script>
 

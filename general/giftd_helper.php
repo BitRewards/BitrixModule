@@ -17,6 +17,7 @@ class GiftdHelper
 
         $is_patched = strstr(file_get_contents($patch_target), 'giftdpatched');
         if(!$is_patched && self::IsSetModuleSettings())
+
         {
             CopyDirFiles($patch_target, $_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/modules/catalog/general/base_discount_coupon.php', true);
             CopyDirFiles($patch_source, $patch_target, true);
@@ -236,19 +237,17 @@ class GiftdHelper
 
     public static function getJSTabScript()
     {
-        return
-            '<script>' .
-            ((self::GetOption('JS_TAB_CUSTOMIZE') && self::GetOption('JS_TAB_IS_ACTIVE')) ? self::GetOption('JS_TAB_OPTIONS') : self::getDefaultJsOptions()) .
-            '
-            (function(){
-                var s = (window.giftdOptions.tab && window.giftdOptions.tab.enabled) ? "giftd.js" : "giftd_no_tab.js";
-                var el = document.createElement("script");
-                el.id = "giftd-script";
-                el.async = true;
-                el.src = "https://static.giftd.ru/embedded/" + s;
-                document.getElementsByTagName("head")[0].appendChild(el);
-            })();
-            </script>';
+        $pid = self::GetOption('PARTNER_CODE');
+
+        return <<<HTML
+<script>
+setTimeout(function(){
+    var el = document.createElement("script"); el.id = "giftd-script"; el.async = true;
+    el.src = "https://giftd.ru/widgets/js/v2?pid=$pid";
+    document.getElementsByTagName("head")[0].appendChild(el);
+}, 0);
+</script>
+HTML;
     }
 
     function MakeModuleOptionsHtml()

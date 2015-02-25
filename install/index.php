@@ -5,7 +5,7 @@ $strPath2Lang = str_replace("\\", "/", __FILE__);
 $strPath2Lang = substr($strPath2Lang, 0, strlen($strPath2Lang)-strlen("/install/index.php"));
 include(GetLangFileName($strPath2Lang."/lang/", "/install/index.php"));
 
-Class giftd_coupon extends CModule
+class giftd_coupon extends CModule
 {
 	var $MODULE_ID = "giftd.coupon";
 	var $MODULE_VERSION;
