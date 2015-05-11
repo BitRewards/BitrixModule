@@ -65,6 +65,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"] . $_POST["Apply"] .
 <script src="//yastatic.net/jquery/2.1.1/jquery.min.js"></script>
 
 
+<style>
+    .component_field {
+        display: none;
+    }
+</style>
+
 <script>
     var Giftd = {
         popup: null,
@@ -92,7 +98,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"] . $_POST["Apply"] .
             $('form[name=giftd_settings] input[name=Apply]').click();
         },
         updateComponentSettings: function() {
-            if ($('input[name=COMPONENT_IS_ACTIVE]').prop('checked'))
+            return;
+
+            var $checkbox = $('input[name=COMPONENT_IS_ACTIVE][type=checkbox]');
+            if ($checkbox.prop('checked'))
                 $('tr.component_field').show();
             else
                 $('tr.component_field').hide();
@@ -106,13 +115,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"] . $_POST["Apply"] .
             }
         },
         updateTabSettings: function(){
-            var checked = $('input[name=JS_TAB_IS_ACTIVE').is(':checked');
+            var checked = $('input[name=JS_TAB_IS_ACTIVE][type=checkbox]').is(':checked');
             $('tr.tab_field input').prop('disabled', !checked);
             $('tr.tab_field').toggle(checked);
             $('tr.tab_disabled_field').toggle(!checked);
         },
         updateTabCustomizeSettings: function(){
-            var checked = $('input[name=JS_TAB_CUSTOMIZE').is(':checked');
+            var checked = $('input[name=JS_TAB_CUSTOMIZE][type=checkbox]').is(':checked');
             $('tr.tab_customize_field input, tr.tab_customize_field textarea').prop('disabled', !checked);
             $('tr.tab_customize_field').toggle(checked);
         },
@@ -155,8 +164,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"] . $_POST["Apply"] .
                     default:
                         break;
                 }
+
+                Giftd.popup.close();
             }
-            Giftd.popup.close();
+
         });
 
         $('#SIGN_IN').click(function () {

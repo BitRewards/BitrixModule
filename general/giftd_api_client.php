@@ -20,7 +20,7 @@ class GiftdClient
     {
         $this->userId = trim($userId);
         $this->apiKey = trim($apiKey);
-        $this->baseUrl = (defined('DEBUG') && DEBUG) ? "https://api.giftd.local/v1/" : "https://api.giftd.ru/v1/";
+        $this->baseUrl = (defined('GIFTD_DEBUG') && GIFTD_DEBUG) ? "https://api.giftd.local/v1/" : "http://api.giftd.ru/v1/";
     }
 
     private function httpPostCurl($url, array $params)
@@ -101,9 +101,10 @@ class GiftdClient
         throw new Giftd_Exception($rawResponse['data'], $rawResponse['code']);
     }
 
-    private function constructGiftCard(array $rawData)
+    private function constructGiftCard(array $rawData, $token)
     {
         $card = new Giftd_Card();
+        $card->token = $token;
         foreach ($rawData as $key => $value) {
             $card->$key = $value;
         }
@@ -140,7 +141,7 @@ class GiftdClient
                 }
                 break;
             case static::RESPONSE_TYPE_DATA:
-                return $this->constructGiftCard($response['data']);
+                return $this->constructGiftCard($response['data'], $token);
             default:
                 throw new Giftd_Exception("Unknown response type {$response['type']}");
         }
@@ -185,7 +186,7 @@ class GiftdClient
             'comment' => $comment
         ));
 
-        return $this->constructGiftCard($result['data']);
+        return $this->constructGiftCard($result['data'], $token);
     }
 
     private function calculateSignature($method, array $params)
@@ -241,6 +242,7 @@ class Giftd_Card
     public $expires;
     public $token_status;
     public $charge_details;
+    public $token;
 }
 
 /**

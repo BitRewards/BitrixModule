@@ -12,23 +12,33 @@ class GiftdHelper
 
     function CheckPatchOnBeforeProlog()
     {
-        $patch_source = $_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/modules/'.self::$MODULE_ID.'/general/discount_coupon.php';
-        $patch_target = $_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/modules/catalog/general/discount_coupon.php';
+        $cache = new CPHPCache();
+        if (!$cache->InitCache(60, $cacheId = 'giftd-discount-patch-check', '/')) {
+            $cache->StartDataCache(60, $cacheId, '/');
+            $cache->EndDataCache(array('time' => time()));
+            $patch_source = $_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/modules/'.self::$MODULE_ID.'/general/discount_coupon.php';
+            $patch_target = $_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/modules/catalog/general/discount_coupon.php';
 
-        $is_patched = strstr(file_get_contents($patch_target), 'giftdpatched');
-        if(!$is_patched && self::IsSetModuleSettings())
-
-        {
-            CopyDirFiles($patch_target, $_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/modules/catalog/general/base_discount_coupon.php', true);
-            CopyDirFiles($patch_source, $patch_target, true);
+            $is_patched = strpos(file_get_contents($patch_target), 'giftdpatched') !== false;
+            if(!$is_patched && self::IsSetModuleSettings()) {
+                CopyDirFiles($patch_target, $_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/modules/catalog/general/base_discount_coupon.php', true);
+                CopyDirFiles($patch_source, $patch_target, true);
+            }
         }
     }
 
     public static function InjectJSPanelScriptOnBeforeProlog()
     {
-        static::InjectJSTabScriptOnBeforeProlog();
+        self::InjectJSTabScriptOnBeforeProlog();
     }
-    
+
+    public static function ReplaceTopWithParent(&$content)
+    {
+        if (self::GetOption('REPLACE_TOP_WITH_PARENT')) {
+            $content = str_replace(array("top.bx", "top.BX"), array("parent.bx", "parent.BX"), $content);
+        }
+    }
+
     public static function InjectJSTabScriptOnBeforeProlog()
     {
         global $APPLICATION;
@@ -37,6 +47,8 @@ class GiftdHelper
             isset($_SERVER['REQUEST_URI']) &&
             strpos($_SERVER['REQUEST_URI'], BX_ROOT.'/admin') === false) {
             $APPLICATION->AddHeadString(self::getJSTabScript());
+
+            AddEventHandler("main", "OnEndBufferContent", array("GiftdHelper", "ReplaceTopWithParent"));
         }
     }
 
@@ -258,7 +270,7 @@ HTML;
         // making all fields visible
         // $style = $has_options_set ? '' : ' style="display:none;" ';
         $style = '';
-        $disabled_fields = array('PARTNER_CODE', 'PARTNER_TOKEN_PREFIX');
+        $disabled_fields = array();
 
         $html = '<tr class="heading"><td colspan="2">'. ($autoconfig ?: GetMessage('MODULE_API_SETTINGS')) .'</td></tr>';
         foreach(self::$API_OPTIONS as $key) {

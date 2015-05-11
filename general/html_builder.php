@@ -20,7 +20,7 @@ class GenericHtmlBuilder implements IHtmlBuilder
 
     public function OneColumnTableRow($html, $properties='')
     {
-        return '<tr '.$properties.'>'.$this->GenericTableColumn($html, 'colspan="2"').'</tr>';
+        return '<tr '.$properties.'>'.$this->GenericTableColumn($html, 'colspan="2" style="padding: 0 50px; text-align: center;"').'</tr>';
     }
 
     public function GenericTableColumn($innerHtml, $properties)
@@ -41,7 +41,9 @@ class GenericHtmlBuilder implements IHtmlBuilder
 
     public function GenericInputCheckboxField($name, $value, $title, $isChecked)
     {
-        $html = $title.' <input type="checkbox" name="'.$name.'" value="'.$value.'" '.($isChecked ? 'checked' : '').'>';
+        $html = $title . ' '
+            . "<input type='hidden' name='$name' value='' />"
+            . '<input type="checkbox" name="'.$name.'" value="'.$value.'" '.($isChecked ? 'checked' : '').'>' . '';
         return $html;
     }
 

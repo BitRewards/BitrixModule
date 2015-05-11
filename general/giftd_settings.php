@@ -84,6 +84,12 @@ abstract class GiftdSettings implements IGiftdSettings
         return $this->html_builder->GenericTableRow('', $field, $class);
     }
 
+    protected function OneColumnRow($key, $field, $class='')
+    {
+        $class = empty($class) ? $this->_default_class : $class;
+        return $this->html_builder->OneColumnTableRow($field, $class);
+    }
+
     protected function SettingTableRow($key, $field, $class='')
     {
         $class = empty($class) ? $this->_default_class : $class;

@@ -39,6 +39,9 @@ class giftd_coupon extends CModule
         RegisterModuleDependences('main', 'OnBeforeProlog', $this->MODULE_ID, 'GiftdHelper', 'InjectJSTabScriptOnBeforeProlog');
         RegisterModuleDependences('sale', 'OnBeforeOrderAdd', $this->MODULE_ID, 'GiftdDiscountManager', 'ChargeCouponOnBeforeOrderAdd');
         RegisterModuleDependences('catalog', 'OnGetOptimalPrice', $this->MODULE_ID, 'GiftdDiscountManager', 'AdjustPriceOnGetOptimalPrice');
+        RegisterModuleDependences('catalog', 'OnGetOptimalPriceResult', $this->MODULE_ID, 'GiftdDiscountManager', 'AdjustPriceOnGetOptimalPriceResult');
+
+        RegisterModuleDependences('sale', 'onBuildCouponProviders', $this->MODULE_ID, 'GiftdDiscountManager', 'OnBuildCouponProviders');
 
         return true;
 	}
@@ -49,6 +52,10 @@ class giftd_coupon extends CModule
         UnRegisterModuleDependences('main', 'OnBeforeProlog', $this->MODULE_ID, 'GiftdHelper', 'InjectJSTabScriptOnBeforeProlog');
         UnRegisterModuleDependences('sale', 'OnBeforeOrderAdd', $this->MODULE_ID, 'GiftdDiscountManager', 'ChargeCouponOnBeforeOrderAdd');
         UnRegisterModuleDependences('catalog', 'OnGetOptimalPrice', $this->MODULE_ID, 'GiftdDiscountManager', 'AdjustPriceOnGetOptimalPrice');
+        UnRegisterModuleDependences('catalog', 'OnGetOptimalPriceResult', $this->MODULE_ID, 'GiftdDiscountManager', 'AdjustPriceOnGetOptimalPriceResult');
+
+        UnRegisterModuleDependences('sale', 'onBuildCouponProviders', $this->MODULE_ID, 'GiftdDiscountManager', 'OnBuildCouponProviders');
+
         UnRegisterModule($this->MODULE_ID);
 
 		return true;
@@ -65,13 +72,13 @@ class giftd_coupon extends CModule
 
 	function UnInstallFiles()
 	{
-        if(file_exists($_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/modules/catalog/general/base_discount_coupon.php'))
-        {
-            CopyDirFiles($_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/modules/catalog/general/base_discount_coupon.php', $_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/modules/catalog/general/discount_coupon.php', true);
-            DeleteDirFilesEx(BX_ROOT.'/modules/catalog/general/base_discount_coupon.php');
+        $root = $_SERVER["DOCUMENT_ROOT"] . BX_ROOT;
+        if (file_exists($root . '/modules/catalog/general/base_discount_coupon.php')) {
+            CopyDirFiles($root . '/modules/catalog/general/base_discount_coupon.php', $root . '/modules/catalog/general/discount_coupon.php', true);
+            unlink($root . '/modules/catalog/general/base_discount_coupon.php');
         }
 
-        DeleteDirFiles($_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/modules/'.$this->MODULE_ID.'/install/components', $_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/components');
+        //DeleteDirFiles($_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/modules/'.$this->MODULE_ID.'/install/components', $_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/components');
 
         return true;
 	}
@@ -91,8 +98,8 @@ class giftd_coupon extends CModule
             GiftdHelper::GetOption('USER_ID')
         );
 
-        $this->UnInstallFiles();
         $this->UnRegister();
+        $this->UnInstallFiles();
 
         return true;
 	}
