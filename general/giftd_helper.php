@@ -53,7 +53,20 @@ class GiftdHelper
     {
         if (defined('GIFTD_REPLACE_TOP_WITH_PARENT')) {
             $content = ob_get_clean();
-            echo str_replace(array("top.bx", "top.BX"), array("(window.bx || parent.bx)", "(window.BX || parent.BX)"), $content);
+            $oneliner = '((function(){ try {return window.parent.location.href ? window.parent : window;} catch (e) {return window;}})())';
+
+            echo preg_replace(
+                "/([^\.a-z0-9A-Z])(window\.)?(top|parent)\s*([\"\'\.\[])(?![\"']?location)/uis",
+                '$1((function(){ try {return !$3.location ? $3 : (window.parent.location.href ? window.parent : window);} catch (e) {return window;}})())$4',
+                $content
+            );
+
+            return;
+
+            $onelinerLower = "$oneliner.bx";
+            $onelinerUpper = "$oneliner.BX";
+
+            echo str_replace(array("window.top.bx", "window.parent.bx", "top.bx", "parent.bx", "window.top.BX", "window.parent.BX", "top.BX", "parent.BX"), array($onelinerLower, $onelinerLower, $onelinerLower, $onelinerLower, $onelinerUpper, $onelinerUpper, $onelinerUpper, $onelinerUpper), $content);
         }
     }
 
