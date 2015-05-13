@@ -10,6 +10,8 @@ class GiftdHelper
     static public $COMPONENT_OPTIONS = array('COMPONENT_IS_ACTIVE', 'COMPONENT_TEMPLATE', 'COMPONENT_TEMPLATE_JS_COUPON_FIELD_ID', 'COMPONENT_TEMPLATE_JS_CALLBACK');
     static public $TAB_OPTIONS = array('JS_TAB_IS_ACTIVE', 'JS_TAB_POSITION', 'JS_TAB_CUSTOMIZE', 'JS_TAB_OPTIONS');
 
+    private static $_optionsCache = array();
+
     function CheckPatchOnBeforeProlog()
     {
         $cache = new CPHPCache();
@@ -32,23 +34,26 @@ class GiftdHelper
         self::InjectJSTabScriptOnBeforeProlog();
     }
 
-    public static function ReplaceTopWithParent(&$content)
-    {
-        if (self::GetOption('REPLACE_TOP_WITH_PARENT')) {
-            $content = str_replace(array("top.bx", "top.BX"), array("parent.bx", "parent.BX"), $content);
-        }
-    }
-
     public static function InjectJSTabScriptOnBeforeProlog()
     {
         global $APPLICATION;
 
         if (self::IsSetModuleSettings() &&
-            isset($_SERVER['REQUEST_URI']) &&
-            strpos($_SERVER['REQUEST_URI'], BX_ROOT.'/admin') === false) {
+            !defined('ADMIN_SECTION')) {
             $APPLICATION->AddHeadString(self::getJSTabScript());
 
-            AddEventHandler("main", "OnEndBufferContent", array("GiftdHelper", "ReplaceTopWithParent"));
+            if (self::GetOption("REPLACE_TOP_WITH_PARENT")) {
+                define('GIFTD_REPLACE_TOP_WITH_PARENT', true);
+                ob_start();
+            }
+        }
+    }
+
+    public static function ReplaceTopWithParentOnAfterEpilog()
+    {
+        if (defined('GIFTD_REPLACE_TOP_WITH_PARENT')) {
+            $content = ob_get_clean();
+            echo str_replace(array("top.bx", "top.BX"), array("(window.bx || parent.bx)", "(window.BX || parent.BX)"), $content);
         }
     }
 
@@ -59,12 +64,16 @@ class GiftdHelper
 
     public static function GetOption($key)
     {
-        return COption::GetOptionString(self::$MODULE_ID, $key);
+        if (!isset(self::$_optionsCache[$key])) {
+            self::$_optionsCache[$key] = COption::GetOptionString(self::$MODULE_ID, $key);
+        }
+        return self::$_optionsCache[$key];
     }
 
     public static function SetOption($key, $value)
     {
         COption::SetOptionString(self::$MODULE_ID, $key, $value);
+        unset(self::$_optionsCache[$key]);
     }
 
     function IsSetSettings($keys)

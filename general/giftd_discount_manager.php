@@ -25,9 +25,9 @@ class GiftdDiscountManager
         if(self::$_client != null)
             return true;
 
-        $api_key = COption::GetOptionString(self::$_module_id, 'API_KEY');
-        $user_id = COption::GetOptionString(self::$_module_id, 'USER_ID');
-        self::$_code_prefix = COption::GetOptionString(self::$_module_id, 'PARTNER_TOKEN_PREFIX');
+        $api_key = GiftdHelper::GetOption('API_KEY');
+        $user_id = GiftdHelper::GetOption('USER_ID');
+        self::$_code_prefix = GiftdHelper::GetOption('PARTNER_TOKEN_PREFIX');
 
         if(strlen($api_key) == 0 || strlen($user_id) == 0)
             return false;
