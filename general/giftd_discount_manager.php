@@ -295,6 +295,10 @@ class GiftdDiscountManager
 
         $quantity = self::$_lastQuantity;
 
+        if (!$basketItemsCount || !$basketAmount || !$quantity) {
+            return;
+        }
+
         if (isset($result['DISCOUNT_PRICE']) && isset($result['DISCOUNT']['NAME']) && isset($result['PRICE']['PRICE'])) {
             $originalPrice = isset($result['RESULT_PRICE']) ? $result['RESULT_PRICE']['BASE_PRICE'] : $result['PRICE']['PRICE'];
             $bitrixDiscountId = isset($result['DISCOUNT']['ID']) ? $result['DISCOUNT']['ID'] : null;
