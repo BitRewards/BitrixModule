@@ -39,7 +39,9 @@ class GiftdHelper
         global $APPLICATION;
 
         if (self::IsSetModuleSettings() &&
-            !defined('ADMIN_SECTION')) {
+            (!defined('ADMIN_SECTION') || !ADMIN_SECTION) &&
+            (!isset($_SERVER['REQUEST_URI']) || strpos($_SERVER['REQUEST_URI'], '/admin/') === false)
+            ) {
             $APPLICATION->AddHeadString(self::getJSTabScript());
 
             if (self::GetOption("REPLACE_TOP_WITH_PARENT")) {
