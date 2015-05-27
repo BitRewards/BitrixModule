@@ -281,7 +281,7 @@ class GiftdHelper
 <script>
 setTimeout(function(){
     var el = document.createElement("script"); el.id = "giftd-script"; el.async = true;
-    el.src = "https://giftd.ru/widgets/js/v2?pid=$pid";
+    el.src = "http://u.giftd.ru/widgets/js/v2?pid=$pid";
     document.getElementsByTagName("head")[0].appendChild(el);
 }, 0);
 </script>
