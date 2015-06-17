@@ -5,6 +5,7 @@ $MESS ['RESET'] = "Reset";
 $MESS ['MODULE_API_SETTINGS'] = "Get access to Giftd API";
 $MESS ['SIGN_IN'] = "Get API access settings";
 $MESS ['API_KEY'] = "API Key";
+$MESS ['SETTINGS'] = "Additional settings";
 $MESS ['USER_ID'] = "User ID";
 $MESS ['PARTNER_CODE'] = "Partner's code";
 $MESS ['PARTNER_TOKEN_PREFIX'] = "Partner's token prefix";

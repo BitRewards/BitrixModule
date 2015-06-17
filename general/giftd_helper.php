@@ -6,7 +6,7 @@ class GiftdHelper
 {
     static public $MODULE_ID = 'giftd.coupon';
 
-    static public $API_OPTIONS = array('API_KEY', 'USER_ID', 'PARTNER_CODE', 'PARTNER_TOKEN_PREFIX');
+    static public $API_OPTIONS = array('API_KEY', 'USER_ID', 'PARTNER_CODE', 'PARTNER_TOKEN_PREFIX', 'SETTINGS');
     static public $COMPONENT_OPTIONS = array('COMPONENT_IS_ACTIVE', 'COMPONENT_TEMPLATE', 'COMPONENT_TEMPLATE_JS_COUPON_FIELD_ID', 'COMPONENT_TEMPLATE_JS_CALLBACK');
     static public $TAB_OPTIONS = array('JS_TAB_IS_ACTIVE', 'JS_TAB_POSITION', 'JS_TAB_CUSTOMIZE', 'JS_TAB_OPTIONS');
 
@@ -81,6 +81,15 @@ class GiftdHelper
 
     public static function GetOption($key)
     {
+        if ($key != 'SETTINGS' && SITE_ID && (!defined('ADMIN_SECTION') || !ADMIN_SECTION)) {
+            $additionalSettings = GiftdHelper::GetOption('SETTINGS');
+            if ($additionalSettings) {
+                $additionalSettings = json_decode($additionalSettings, true);
+                if (isset($additionalSettings['sites'][SITE_ID][$key])) {
+                    return $additionalSettings['sites'][SITE_ID][$key];
+                }
+            }
+        }
         if (!isset(self::$_optionsCache[$key])) {
             self::$_optionsCache[$key] = COption::GetOptionString(self::$MODULE_ID, $key);
         }
@@ -104,7 +113,7 @@ class GiftdHelper
 
     function IsSetModuleSettings()
     {
-        return self::IsSetSettings(self::$API_OPTIONS);
+        return self::IsSetSettings(array('API_KEY', 'USER_ID', 'PARTNER_CODE', 'PARTNER_TOKEN_PREFIX'));
     }
 
     function IsComponentActive()
@@ -258,7 +267,7 @@ class GiftdHelper
             }
         }
 
-
+        self::SetOption('SETTINGS', isset($values['SETTINGS']) ? $values['SETTINGS'] : null);
     }
 
     public static function getDefaultJsOptions()
@@ -301,10 +310,20 @@ HTML;
         $html = '<tr class="heading"><td colspan="2">'. ($autoconfig ?: GetMessage('MODULE_API_SETTINGS')) .'</td></tr>';
         foreach(self::$API_OPTIONS as $key) {
             $disabled = in_array($key, $disabled_fields) ? ' disabled' : '';
-            $html .= '<tr class="optional" '.$style.'>
+            switch ($key) {
+                case 'SETTINGS':
+                    $html .= '<tr class="optional" '.$style.'>
+                        <td class="adm-detail-content-cell-l" width="50%">'.GetMessage($key).' (JSON)</td>
+                        <td class="adm-detail-content-cell-r" width="50%"><textarea name="SETTINGS" style="width: 300px; height: 200px;">' .GiftdHelper::GetOption($key).'</textarea></td>
+                      </tr>';
+                    break;
+                default:
+                    $html .= '<tr class="optional" '.$style.'>
                         <td class="adm-detail-content-cell-l" width="50%">'.GetMessage($key).'</td>
                         <td class="adm-detail-content-cell-r" width="50%"><input type="text" name="'.$key.'" value="'.GiftdHelper::GetOption($key).'" '.$disabled.'></td>
                       </tr>';
+            }
+
         }
 
         return $html;
