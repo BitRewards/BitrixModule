@@ -87,13 +87,9 @@ class GiftdDiscountManager
     private static function AddDiscountCoupon($coupon_code, $card)
     {
         $discountName = 'Giftd-' . ((float)$card->amount_available) . '-' . $card->min_amount_total;
-        if (self::_useNewCouponSystem()) {
-            $iterator = \Bitrix\Catalog\DiscountTable::getList(array('filter' => array('=NAME' => $discountName, '=ACTIVE' => 'Y')));
-            $discount = $iterator->fetch();
-        } else {
-            $q = CCatalogDiscount::GetList(array(), $arFilter = array('NAME' => $discountName, 'ACTIVE' => 'Y'));
-            $discount = $q->GetNext();
-        }
+
+        $q = CCatalogDiscount::GetList(array(), $arFilter = array('NAME' => $discountName, 'ACTIVE' => 'Y', 'SITE_ID' => SITE_ID));
+        $discount = $q->GetNext();
 
         $id_discount = $discount ? $discount['ID'] : 0;
 
