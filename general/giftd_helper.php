@@ -71,8 +71,8 @@ class GiftdHelper
             $onelinerUpper = "$oneliner.BX";
 
             echo str_replace(
-                array("window.top.bx", "window.parent.bx", "top.bx", "parent.bx", "window.top.BX", "window.parent.BX", "top.BX", "parent.BX", "window.top.rsasec", "top.rsasec", "top.$", "window.top.$"),
-                array($onelinerLower, $onelinerLower, $onelinerLower, $onelinerLower, $onelinerUpper, $onelinerUpper, $onelinerUpper, $onelinerUpper, "$oneliner.rsasec", "$oneliner.rsasec", "$oneliner.$", "$oneliner.$"),
+                array("window.top.bx", "window.parent.bx", "top.bx", "parent.bx", "window.top.BX", "window.parent.BX", "top.BX", "parent.BX", "window.top.rsasec", "top.rsasec", "top.$", "window.top.$", "top.initFields", "window.top.initFields"),
+                array($onelinerLower, $onelinerLower, $onelinerLower, $onelinerLower, $onelinerUpper, $onelinerUpper, $onelinerUpper, $onelinerUpper, "$oneliner.rsasec", "$oneliner.rsasec", "$oneliner.$", "$oneliner.$", "$oneliner.initFields", "$oneliner.top.initFields"),
                 $content
             );
         }
