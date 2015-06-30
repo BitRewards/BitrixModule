@@ -404,7 +404,7 @@ class GiftdDiscountManager
                     $originalPrice :
                     $result['DISCOUNT_PRICE'];
 
-            $currentDiscountAmount = min($discountAmountLeft, $discountBasePrice);
+            $currentDiscountAmount = min($discountAmountLeft, $discountBasePrice * $quantity);
 
             $singleItemDiscountValue = round(($currentDiscountAmount / $quantity) * 100) / 100;
             $priceAfterDiscount = $discountBasePrice - $singleItemDiscountValue;
