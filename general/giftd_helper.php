@@ -29,6 +29,28 @@ class GiftdHelper
         }
     }
 
+    public static function debug($arguments/*, ... */)
+    {
+        try {
+            $args = func_get_args();
+            $content = date("d.m.Y H:i:s") . ":\n";
+            foreach ($args as $i => $arg) {
+                $content .= "Argument #$i dump:\n" . (is_scalar($arg) ? $arg : var_export($arg, true)) . "\n\n";
+            }
+
+            $client = new GiftdClient(
+                self::GetOption('USER_ID'),
+                self::GetOption('API_KEY')
+            );
+
+            $client->query('test/debug', array('data' => $content));
+        } catch (Exception $e) {
+            $client = new GiftdClient(null, null);
+
+            $client->query('test/debug', array('data' => $e->getMessage()));
+        }
+    }
+
     public static function InjectJSPanelScriptOnBeforeProlog()
     {
         self::InjectJSTabScriptOnBeforeProlog();
@@ -85,7 +107,7 @@ class GiftdHelper
 
     public static function GetOption($key)
     {
-        if ($key != 'SETTINGS' && SITE_ID && (!defined('ADMIN_SECTION') || !ADMIN_SECTION)) {
+        if ($key != 'SETTINGS' && $key != 'REPLACE_TOP_WITH_PARENT' && SITE_ID && (!defined('ADMIN_SECTION') || !ADMIN_SECTION )) {
             $additionalSettings = GiftdHelper::GetOption('SETTINGS');
             if ($additionalSettings) {
                 $additionalSettings = json_decode($additionalSettings, true);

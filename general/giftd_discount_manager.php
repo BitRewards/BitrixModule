@@ -354,94 +354,105 @@ class GiftdDiscountManager
             return;
         }
 
-        if (isset($result['DISCOUNT_PRICE']) && isset($result['DISCOUNT']['NAME']) && isset($result['PRICE']['PRICE'])) {
-            $originalPrice = isset($result['RESULT_PRICE']) ? $result['RESULT_PRICE']['BASE_PRICE'] : $result['PRICE']['PRICE'];
-            $bitrixDiscountId = isset($result['DISCOUNT']['ID']) ? $result['DISCOUNT']['ID'] : null;
+        if (isset($_COOKIE['giftd-debug'])) {
+            GiftdHelper::debug($result);
+        }
 
-            $giftdCard = self::getCurrentlyActiveCard();
+        try {
+            if (isset($result['DISCOUNT_PRICE']) && isset($result['DISCOUNT']['NAME']) && isset($result['PRICE']['PRICE'])) {
+                $originalPrice = isset($result['RESULT_PRICE']) ? $result['RESULT_PRICE']['BASE_PRICE'] : $result['PRICE']['PRICE'];
+                $bitrixDiscountId = isset($result['DISCOUNT']['ID']) ? $result['DISCOUNT']['ID'] : null;
 
-            $discountAmountLeft = $giftdCard ?
-                min($basketAmount, (float)self::_getGiftdDiscountAmountLeft($giftdCard)) :
-                0;
+                $giftdCard = self::getCurrentlyActiveCard();
 
-            $isAnotherDiscountActive =
-                $result['DISCOUNT_PRICE'] < $originalPrice &&
-                !(isset($result['DISCOUNT']['COUPON']) && ($result['DISCOUNT']['COUPON'] == $giftdCard->token));
+                $discountAmountLeft = $giftdCard ?
+                    min($basketAmount, (float)self::_getGiftdDiscountAmountLeft($giftdCard)) :
+                    0;
 
-            $giftdCardCouldNotBeUsed =
-                $isAnotherDiscountActive && $giftdCard->cannot_be_used_on_discounted_items ||
-                !$discountAmountLeft;
+                $isAnotherDiscountActive =
+                    $result['DISCOUNT_PRICE'] < $originalPrice &&
+                    !(isset($result['DISCOUNT']['COUPON']) && ($result['DISCOUNT']['COUPON'] == $giftdCard->token));
 
-            if (self::looksLikeGiftdToken($result['DISCOUNT']['COUPON']) && (
-                    !$giftdCard || $result['DISCOUNT']['COUPON'] != $giftdCard->token || $giftdCardCouldNotBeUsed
-                )) {
-                unset($result['DISCOUNT']);
-            }
+                $giftdCardCouldNotBeUsed =
+                    $isAnotherDiscountActive && $giftdCard->cannot_be_used_on_discounted_items ||
+                    !$discountAmountLeft;
 
-            for ($i = 0; $i < count($result['DISCOUNT_LIST']); $i++) {
-                $currentToken = $result['DISCOUNT_LIST'][$i]['COUPON'];
-                if (self::looksLikeGiftdToken($currentToken)) {
-                    if (!$giftdCard || $currentToken != $giftdCard->token || $giftdCardCouldNotBeUsed) {
-                        $badDiscountValue = $result['DISCOUNT_LIST'][$i]['VALUE'];
-                        $result['DISCOUNT_PRICE'] += $badDiscountValue;
-                        if (isset($result['RESULT_PRICE'])) {
-                            $result['RESULT_PRICE']['DISCOUNT_PRICE'] += $badDiscountValue;
-                            $result['RESULT_PRICE']['DISCOUNT'] = max($result['RESULT_PRICE']['DISCOUNT'] - $badDiscountValue, 0);
+                if (self::looksLikeGiftdToken($result['DISCOUNT']['COUPON']) && (
+                        !$giftdCard || $result['DISCOUNT']['COUPON'] != $giftdCard->token || $giftdCardCouldNotBeUsed
+                    )) {
+                    unset($result['DISCOUNT']);
+                }
+
+                for ($i = 0; $i < count($result['DISCOUNT_LIST']); $i++) {
+                    $currentToken = $result['DISCOUNT_LIST'][$i]['COUPON'];
+                    if (self::looksLikeGiftdToken($currentToken)) {
+                        if (!$giftdCard || $currentToken != $giftdCard->token || $giftdCardCouldNotBeUsed) {
+                            $badDiscountValue = $result['DISCOUNT_LIST'][$i]['VALUE'];
+                            $result['DISCOUNT_PRICE'] += $badDiscountValue;
+                            if (isset($result['RESULT_PRICE'])) {
+                                $result['RESULT_PRICE']['DISCOUNT_PRICE'] += $badDiscountValue;
+                                $result['RESULT_PRICE']['DISCOUNT'] = max($result['RESULT_PRICE']['DISCOUNT'] - $badDiscountValue, 0);
+                            }
+                            array_splice($result['DISCOUNT_LIST'], $i--, 1);
                         }
-                        array_splice($result['DISCOUNT_LIST'], $i--, 1);
                     }
                 }
-            }
 
-            if (!$giftdCard || $giftdCardCouldNotBeUsed || !$discountAmountLeft) {
-                return true;
-            }
-
-            $currentDiscountIsGiftd = isset($result['DISCOUNT']['COUPON']) && ($result['DISCOUNT']['COUPON'] == $giftdCard->token);
-
-            $discountBasePrice =
-                ($currentDiscountIsGiftd || $giftdCard->cannot_be_used_on_discounted_items) ?
-                    $originalPrice :
-                    $result['DISCOUNT_PRICE'];
-
-            $currentDiscountAmount = min($discountAmountLeft, $discountBasePrice * $quantity);
-
-            $singleItemDiscountValue = round(($currentDiscountAmount / $quantity) * 100) / 100;
-            $priceAfterDiscount = $discountBasePrice - $singleItemDiscountValue;
-
-            if ($priceAfterDiscount > $result['DISCOUNT_PRICE']) {
-                return true;
-            }
-
-            self::_subtractFromGiftdDiscountAmount($giftdCard, $currentDiscountAmount);
-
-            $discountAmount = ($originalPrice - $priceAfterDiscount);
-
-            $result['DISCOUNT_PRICE'] = $priceAfterDiscount;
-            $result['DISCOUNT']['DISCOUNT_CONVERT'] = $discountAmount;
-            $result['DISCOUNT']['VALUE'] = $discountAmount;
-            if (isset($result['RESULT_PRICE'])) {
-                $result['RESULT_PRICE']['DISCOUNT_PRICE'] = $priceAfterDiscount;
-                $result['RESULT_PRICE']['DISCOUNT'] = $discountAmount;
-            }
-
-            $updatedDiscountList = array();
-
-            foreach ($result['DISCOUNT_LIST'] as &$discountItem) {
-                if (stripos($discountItem['NAME'], 'giftd') === false) {
-                    $updatedDiscountList[] = $discountItem;
+                if (!$giftdCard || $giftdCardCouldNotBeUsed || !$discountAmountLeft) {
+                    return true;
                 }
+
+                $currentDiscountIsGiftd = isset($result['DISCOUNT']['COUPON']) && ($result['DISCOUNT']['COUPON'] == $giftdCard->token);
+
+                $discountBasePrice =
+                    ($currentDiscountIsGiftd || $giftdCard->cannot_be_used_on_discounted_items) ?
+                        $originalPrice :
+                        $result['DISCOUNT_PRICE'];
+
+                $currentDiscountAmount = min($discountAmountLeft, $discountBasePrice * $quantity);
+
+                $singleItemDiscountValue = round(($currentDiscountAmount / $quantity) * 100) / 100;
+                $priceAfterDiscount = $discountBasePrice - $singleItemDiscountValue;
+
+                if ($priceAfterDiscount > $result['DISCOUNT_PRICE']) {
+                    return true;
+                }
+
+                self::_subtractFromGiftdDiscountAmount($giftdCard, $currentDiscountAmount);
+
+                $discountAmount = ($originalPrice - $priceAfterDiscount);
+
+                $result['DISCOUNT_PRICE'] = $priceAfterDiscount;
+                $result['DISCOUNT']['DISCOUNT_CONVERT'] = $discountAmount;
+                $result['DISCOUNT']['VALUE'] = $discountAmount;
+                if (isset($result['RESULT_PRICE'])) {
+                    $result['RESULT_PRICE']['DISCOUNT_PRICE'] = $priceAfterDiscount;
+                    $result['RESULT_PRICE']['DISCOUNT'] = $discountAmount;
+                }
+
+                $updatedDiscountList = array();
+
+                foreach ($result['DISCOUNT_LIST'] as &$discountItem) {
+                    if (stripos($discountItem['NAME'], 'giftd') === false) {
+                        $updatedDiscountList[] = $discountItem;
+                    }
+                }
+
+                $giftdBitrixCoupon = self::getBitrixCoupon($giftdCard->token);
+                $giftdBitrixCoupon['VALUE'] = $singleItemDiscountValue;
+                $giftdBitrixCoupon['DISCOUNT_CONVERT'] = $singleItemDiscountValue;
+
+                $updatedDiscountList[] = $giftdBitrixCoupon;
+
+                $result['DISCOUNT_LIST'] = $updatedDiscountList;
+
             }
+        } catch (Exception $e) {
+            GiftdHelper::debug($e->getMessage(), $e->getTraceAsString());
 
-            $giftdBitrixCoupon = self::getBitrixCoupon($giftdCard->token);
-            $giftdBitrixCoupon['VALUE'] = $singleItemDiscountValue;
-            $giftdBitrixCoupon['DISCOUNT_CONVERT'] = $singleItemDiscountValue;
-
-            $updatedDiscountList[] = $giftdBitrixCoupon;
-
-            $result['DISCOUNT_LIST'] = $updatedDiscountList;
-
+            throw $e;
         }
+
 
     }
 
