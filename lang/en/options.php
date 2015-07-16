@@ -10,10 +10,6 @@ $MESS ['USER_ID'] = "User ID";
 $MESS ['PARTNER_CODE'] = "Partner's code";
 $MESS ['PARTNER_TOKEN_PREFIX'] = "Partner's token prefix";
 
-$MESS ["REPLACE_TOP_WITH_PARENT"] = 'Replace "top.bx..." to "parent.bx..." (JS calls)';
-$MESS ["REPLACE_TOP_WITH_PARENT_HELP"] = "Tick the checkbox if you have any problems on your site with Giftd topbar being displayed.";
-
-
 $MESS ['COMPONENT_VIEW_SETTINGS'] = "Coupons validation component";
 $MESS ["COMPONENT_IS_ACTIVE"] = "Activity";
 $MESS ['COMPONENT_IS_ACTIVE_HELP'] = "Tick the checkbox to enable our solution for validation of promo-codes via Giftd API.<br><br><br>";

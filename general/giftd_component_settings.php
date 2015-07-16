@@ -20,8 +20,6 @@ class GiftdComponentSettings extends GiftdSettings implements IGiftdSettings
             'COMPONENT_TEMPLATE_JS_COUPON_FIELD_ID_HELP' => array('ValueTableRow'=>array('Help', 'class="optional component_field template_field"')),
             'COMPONENT_TEMPLATE_JS_CALLBACK' => array('SettingTableRow'=>array('Text', 'class="optional component_field template_field"')),
             'COMPONENT_TEMPLATE_JS_CALLBACK_HELP' => array('ValueTableRow'=>array('Help', 'class="optional component_field template_field"')),
-            'REPLACE_TOP_WITH_PARENT' => array('HeadingTableRow'=>array('Checkbox')),
-            'REPLACE_TOP_WITH_PARENT_HELP' => array('OneColumnRow'=>array('Help')),
         );
 
 

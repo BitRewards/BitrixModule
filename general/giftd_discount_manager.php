@@ -61,6 +61,9 @@ class GiftdDiscountManager
      */
     private static function _getGiftdDiscountAmountLeft($card)
     {
+        if (!$card) {
+            return 0;
+        }
         if (self::$_giftdDiscountAmountLeft === null) {
             self::$_giftdDiscountAmountLeft = $card->amount_available;
         }
@@ -369,11 +372,14 @@ class GiftdDiscountManager
                     min($basketAmount, (float)self::_getGiftdDiscountAmountLeft($giftdCard)) :
                     0;
 
-                $isAnotherDiscountActive =
-                    $result['DISCOUNT_PRICE'] < $originalPrice &&
-                    !(isset($result['DISCOUNT']['COUPON']) && ($result['DISCOUNT']['COUPON'] == $giftdCard->token));
+                $currentDiscountIsGiftd = $giftdCard ?
+                    (isset($result['DISCOUNT']['COUPON']) && ($result['DISCOUNT']['COUPON'] == $giftdCard->token)) :
+                    false;
+
+                $isAnotherDiscountActive = isset($result['DISCOUNT']['ID']) && !$currentDiscountIsGiftd;
 
                 $giftdCardCouldNotBeUsed =
+                    !$giftdCard ||
                     $isAnotherDiscountActive && $giftdCard->cannot_be_used_on_discounted_items ||
                     !$discountAmountLeft;
 
@@ -398,11 +404,10 @@ class GiftdDiscountManager
                     }
                 }
 
+
                 if (!$giftdCard || $giftdCardCouldNotBeUsed || !$discountAmountLeft) {
                     return true;
                 }
-
-                $currentDiscountIsGiftd = isset($result['DISCOUNT']['COUPON']) && ($result['DISCOUNT']['COUPON'] == $giftdCard->token);
 
                 $discountBasePrice =
                     ($currentDiscountIsGiftd || $giftdCard->cannot_be_used_on_discounted_items) ?

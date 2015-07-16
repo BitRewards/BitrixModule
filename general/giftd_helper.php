@@ -64,39 +64,19 @@ class GiftdHelper
             (!defined('ADMIN_SECTION') || !ADMIN_SECTION) &&
             (!isset($_SERVER['REQUEST_URI']) || strpos($_SERVER['REQUEST_URI'], '/admin/') === false)
             ) {
-            $APPLICATION->AddHeadString(self::getJSTabScript());
 
-            if (self::GetOption("REPLACE_TOP_WITH_PARENT")) {
-                define('GIFTD_REPLACE_TOP_WITH_PARENT', true);
-                ob_start();
-            }
+            define('GIFTD_INSERT_JS_CODE', 1);
+
+            ob_start();
         }
     }
 
     public static function ReplaceTopWithParentOnAfterEpilog()
     {
-        if (defined('GIFTD_REPLACE_TOP_WITH_PARENT')) {
+        if (defined('GIFTD_INSERT_JS_CODE')) {
             $content = ob_get_clean();
-            $oneliner = '((function(){ try {return window.parent.location.href ? window.parent : window;} catch (e) {return window;}})())';
-/*
-            echo preg_replace(
-                "/([^\.a-z0-9A-Z])(window\.)?(top|parent)\s*([\"\'\.\[])(?![\"']?location)/uis",
-                '$1((function(){ try {return !$3.location ? $3 : (window.parent.location.href ? window.parent : window);} catch (e) {return window;}})())$4',
-                $content
-            );
 
-            return;
-
-*/
-
-            $onelinerLower = "$oneliner.bx";
-            $onelinerUpper = "$oneliner.BX";
-
-            echo str_replace(
-                array("window.top.bx", "window.parent.bx", "top.bx", "parent.bx", "window.top.BX", "window.parent.BX", "top.BX", "parent.BX", "window.top.rsasec", "top.rsasec", "top.$", "window.top.$", "top.initFields", "window.top.initFields"),
-                array($onelinerLower, $onelinerLower, $onelinerLower, $onelinerLower, $onelinerUpper, $onelinerUpper, $onelinerUpper, $onelinerUpper, "$oneliner.rsasec", "$oneliner.rsasec", "$oneliner.$", "$oneliner.$", "$oneliner.initFields", "$oneliner.top.initFields"),
-                $content
-            );
+            echo str_replace("<body>", "<body> " . self::getJSTabScript(), $content);
         }
     }
 
@@ -107,7 +87,7 @@ class GiftdHelper
 
     public static function GetOption($key)
     {
-        if ($key != 'SETTINGS' && $key != 'REPLACE_TOP_WITH_PARENT' && SITE_ID && (!defined('ADMIN_SECTION') || !ADMIN_SECTION )) {
+        if ($key != 'SETTINGS' && SITE_ID && (!defined('ADMIN_SECTION') || !ADMIN_SECTION )) {
             $additionalSettings = GiftdHelper::GetOption('SETTINGS');
             if ($additionalSettings) {
                 $additionalSettings = json_decode($additionalSettings, true);
@@ -232,6 +212,12 @@ class GiftdHelper
         );
     }
 
+    public static function QueryApi($method, $params = array())
+    {
+        $client = new GiftdClient(self::GetOption('USER_ID'), self::GetOption('API_KEY'));
+        return $client->query($method, $params);
+    }
+
     public static function UpdateSettings($values)
     {
         foreach($values as $k=>$v)
@@ -310,17 +296,20 @@ class GiftdHelper
 
     public static function getJSTabScript()
     {
-        $pid = self::GetOption('PARTNER_CODE');
+        $jsUpdated = (int)self::GetOption('JS_CODE_UPDATED');
+        if ((time() - $jsUpdated) > 86400 || isset($_REQUEST['giftd-update-js']) || !($code = self::GetOption('JS_CODE'))) {
+            try {
+                $apiResponse = self::QueryApi('partner/getJs');
+                $code = isset($apiResponse['data']['js']) ? $apiResponse['data']['js'] : "";
 
-        return <<<HTML
-<script>
-setTimeout(function(){
-    var el = document.createElement("script"); el.id = "giftd-script"; el.async = true;
-    el.src = "http://u.giftd.ru/widgets/js/v2?pid=$pid"; el.crossOrigin = "anonymous";
-    document.getElementsByTagName("head")[0].appendChild(el);
-}, 0);
-</script>
-HTML;
+                self::SetOption('JS_CODE', $code);
+                self::SetOption('JS_CODE_UPDATED', time());
+            } catch (Exception $e) {
+                self::debug("Exception while update Giftd JS code: " . $e->getMessage());
+                $code = "";
+            }
+        }
+        return "<script>$code</script>";
     }
 
     function MakeModuleOptionsHtml()
