@@ -62,7 +62,8 @@ class GiftdHelper
 
         if (self::IsSetModuleSettings() &&
             (!defined('ADMIN_SECTION') || !ADMIN_SECTION) &&
-            (!isset($_SERVER['REQUEST_URI']) || strpos($_SERVER['REQUEST_URI'], '/admin/') === false)
+            (!isset($_SERVER['REQUEST_URI']) || strpos($_SERVER['REQUEST_URI'], '/admin/') === false) &&
+            !(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
             ) {
 
             define('GIFTD_INSERT_JS_CODE', 1);
@@ -76,7 +77,7 @@ class GiftdHelper
         if (defined('GIFTD_INSERT_JS_CODE')) {
             $content = ob_get_clean();
 
-            echo str_replace("<body>", "<body> " . self::getJSTabScript(), $content);
+            echo preg_replace("/(<body[^>]*>)/", "$1 " . self::getJSTabScript(), $content, 1);
         }
     }
 
