@@ -297,14 +297,17 @@ class GiftdHelper
 
     public static function getJSTabScript()
     {
-        $jsUpdated = (int)self::GetOption('JS_CODE_UPDATED');
-        if ((time() - $jsUpdated) > 86400 || isset($_REQUEST['giftd-update-js']) || !($code = self::GetOption('JS_CODE'))) {
+        $KEY_CODE_UPDATED = 'JS_CODE_UPDATED_' . SITE_ID;
+        $KEY_CODE = 'JS_CODE_' . SITE_ID;
+
+        $jsUpdated = (int)self::GetOption($KEY_CODE_UPDATED);
+        if ((time() - $jsUpdated) > 86400 || isset($_REQUEST['giftd-update-js']) || !($code = self::GetOption($KEY_CODE))) {
             try {
                 $apiResponse = self::QueryApi('partner/getJs');
                 $code = isset($apiResponse['data']['js']) ? $apiResponse['data']['js'] : "";
 
-                self::SetOption('JS_CODE', $code);
-                self::SetOption('JS_CODE_UPDATED', time());
+                self::SetOption($KEY_CODE, $code);
+                self::SetOption($KEY_CODE_UPDATED, time());
             } catch (Exception $e) {
                 self::debug("Exception while update Giftd JS code: " . $e->getMessage());
                 $code = "";
