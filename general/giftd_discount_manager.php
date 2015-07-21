@@ -203,10 +203,6 @@ class GiftdDiscountManager
                 {
                     $q = CCatalogDiscountCoupon::GetList(array(), $arFilter = array("COUPON"=>$code, "ACTIVE"=>"Y"));
                     $coupon = $q->GetNext();
-
-                    if (!defined('GIFTD_COUPON_APPLIED')) {
-                        define('GIFTD_COUPON_APPLIED', true);
-                    }
                 }
             }
         }
@@ -454,6 +450,10 @@ class GiftdDiscountManager
                 $updatedDiscountList[] = $giftdBitrixCoupon;
 
                 $result['DISCOUNT_LIST'] = $updatedDiscountList;
+
+                if (!defined('GIFTD_COUPON_APPLIED')) {
+                    define('GIFTD_COUPON_APPLIED', true);
+                }
 
             }
         } catch (Exception $e) {
