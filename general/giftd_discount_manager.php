@@ -22,6 +22,12 @@ class GiftdDiscountManager
 
     private static $_lastQuantity = null;
 
+    const STATUS_APPLIED = 'applied';
+    const STATUS_FAILED = 'failed';
+    const STATUS_UNKNOWN = 'unknown';
+
+    public static $STATUS = self::STATUS_UNKNOWN;
+    public static $MESSAGE = null;
 
     private static function Init()
     {
@@ -328,6 +334,8 @@ class GiftdDiscountManager
             }
 
             if (self::getBasketTotalDiscounted() < $minAmountTotal) {
+                self::$STATUS = self::STATUS_FAILED;
+                self::$MESSAGE = sprintf("Минимальная сумма заказа для использования подарочной карты составляет %s", ((float)$minAmountTotal) . " руб.");
                 $result = null;
             }
         }
@@ -378,9 +386,12 @@ class GiftdDiscountManager
 
                 $isAnotherDiscountActive = isset($result['DISCOUNT']['ID']) && !$currentDiscountIsGiftd;
 
+                $giftCardCouldNotBeUsedBecauseOfAnotherDiscount =
+                    $giftdCard && $isAnotherDiscountActive && $giftdCard->cannot_be_used_on_discounted_items;
+
                 $giftdCardCouldNotBeUsed =
                     !$giftdCard ||
-                    $isAnotherDiscountActive && $giftdCard->cannot_be_used_on_discounted_items ||
+                    $giftCardCouldNotBeUsedBecauseOfAnotherDiscount ||
                     !$discountAmountLeft;
 
                 if (self::looksLikeGiftdToken($result['DISCOUNT']['COUPON']) && (
@@ -406,6 +417,13 @@ class GiftdDiscountManager
 
 
                 if (!$giftdCard || $giftdCardCouldNotBeUsed || !$discountAmountLeft) {
+                    if ($giftCardCouldNotBeUsedBecauseOfAnotherDiscount) {
+                        if (self::$STATUS != self::STATUS_APPLIED) {
+                            self::$STATUS = self::STATUS_FAILED;
+                            self::$MESSAGE = "Подарочная карта не может быть использована с товарами, продающимися со скидкой";
+                        }
+                    }
+
                     return true;
                 }
 
@@ -454,14 +472,14 @@ class GiftdDiscountManager
                 if (!defined('GIFTD_COUPON_APPLIED')) {
                     define('GIFTD_COUPON_APPLIED', true);
                 }
-
+                self::$STATUS = self::STATUS_APPLIED;
+                self::$MESSAGE = "Подарочная карта успешно применена";
             }
         } catch (Exception $e) {
             GiftdHelper::debug($e->getMessage(), $e->getTraceAsString());
 
             throw $e;
         }
-
 
     }
 

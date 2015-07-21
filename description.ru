@@ -1,1 +1,1 @@
-— Улучшена логика работы с константой GIFTD_COUPON_APPLIED.
+— Добавлены переменные GiftdDiscountManager::$MESSAGE и GiftdDiscountManager::$STATUS.
