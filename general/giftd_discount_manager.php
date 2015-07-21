@@ -203,6 +203,10 @@ class GiftdDiscountManager
                 {
                     $q = CCatalogDiscountCoupon::GetList(array(), $arFilter = array("COUPON"=>$code, "ACTIVE"=>"Y"));
                     $coupon = $q->GetNext();
+
+                    if (!defined('GIFTD_COUPON_APPLIED')) {
+                        define('GIFTD_COUPON_APPLIED', true);
+                    }
                 }
             }
         }
@@ -358,7 +362,7 @@ class GiftdDiscountManager
         }
 
         if (isset($_COOKIE['giftd-debug'])) {
-            GiftdHelper::debug($result);
+            GiftdHelper::debug($result, $quantity);
         }
 
         try {
