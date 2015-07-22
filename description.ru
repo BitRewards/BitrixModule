@@ -1,1 +1,1 @@
-— Добавлены переменные GiftdDiscountManager::$MESSAGE и GiftdDiscountManager::$STATUS.
+— Добавлена переменная GiftdDiscountManager::$COUPON.

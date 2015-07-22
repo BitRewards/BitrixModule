@@ -28,6 +28,7 @@ class GiftdDiscountManager
 
     public static $STATUS = self::STATUS_UNKNOWN;
     public static $MESSAGE = null;
+    public static $COUPON = null;
 
     private static function Init()
     {
@@ -474,6 +475,7 @@ class GiftdDiscountManager
                 }
                 self::$STATUS = self::STATUS_APPLIED;
                 self::$MESSAGE = "Подарочная карта успешно применена";
+                self::$COUPON = $giftdCard->token;
             }
         } catch (Exception $e) {
             GiftdHelper::debug($e->getMessage(), $e->getTraceAsString());
