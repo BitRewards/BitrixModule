@@ -64,21 +64,18 @@ class GiftdHelper
             (!defined('ADMIN_SECTION') || !ADMIN_SECTION) &&
             (!isset($_SERVER['REQUEST_URI']) || strpos($_SERVER['REQUEST_URI'], '/admin/') === false) &&
             !(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            && !defined('GIFTD_JS_CODE_INSERTED')
             ) {
 
-            define('GIFTD_INSERT_JS_CODE', 1);
+            $APPLICATION->AddHeadString(self::getJSTabScript());
 
-            ob_start();
+            define('GIFTD_JS_CODE_INSERTED', 1);
         }
     }
 
     public static function ReplaceTopWithParentOnAfterEpilog()
     {
-        if (defined('GIFTD_INSERT_JS_CODE')) {
-            $content = ob_get_clean();
-
-            echo preg_replace("/(<body[^>]*>)/", "$1 " . self::getJSTabScript(), $content, 1);
-        }
+        // empty
     }
 
     function MakeSettingArray($name, $type, $opt = '', $disabled = '')
@@ -245,39 +242,39 @@ class GiftdHelper
 
         if ($values['API_KEY'] != ($api_key_old = self::GetOption('API_KEY')) &&
             $values['USER_ID'] != ($user_id_old = self::GetOption('USER_ID'))) {
+            static::handleUninstall($api_key_old, $user_id_old);
+        }
 
-            if ($api_key_old && $user_id_old) {
-                static::handleUninstall($api_key_old, $user_id_old);
-            }
+        if (!empty($api_key) && !empty($user_id)) {
+            $client = new GiftdClient($user_id, $api_key);
+            $response = $client->query('bitrix/getData');
+            if($response['type'] == 'data') {
+                $siteData = static::_getSiteData();
+                $client->query('bitrix/updateData', $siteData);
 
-            if (!empty($api_key) && !empty($user_id)) {
-                $client = new GiftdClient($values['USER_ID'], $values['API_KEY']);
                 $response = $client->query('bitrix/getData');
-                if($response['type'] == 'data') {
-                    $siteData = static::_getSiteData();
-                    $client->query('bitrix/updateData', $siteData);
 
-                    $jsOptionsOld = self::GetOption('JS_TAB_OPTIONS');
-                    $partnerCodeOld = self::GetOption('PARTNER_CODE');
+                $jsOptionsOld = self::GetOption('JS_TAB_OPTIONS');
+                $partnerCodeOld = self::GetOption('PARTNER_CODE');
 
-                    self::SetOption('API_KEY', $values['API_KEY']);
-                    self::SetOption('USER_ID', $values['USER_ID']);
-                    self::SetOption('PARTNER_CODE', $response['data']['partner_code']);
-                    self::SetOption('PARTNER_TOKEN_PREFIX', $response['data']['partner_token_prefix']);
+                self::SetOption('API_KEY', $api_key);
+                self::SetOption('USER_ID', $user_id);
 
-                    if (!empty($jsOptionsOld)) {
-                        self::SetOption(
-                            'JS_TAB_OPTIONS',
-                            str_replace($partnerCodeOld, $response['data']['partner_code'], $jsOptionsOld)
-                        );
-                    }
+                self::SetOption('PARTNER_CODE', !empty($values['PARTNER_CODE']) ? $values['PARTNER_CODE'] : $response['data']['partner_code']);
+                self::SetOption('PARTNER_TOKEN_PREFIX', !empty($values['PARTNER_TOKEN_PREFIX']) ?  $values['PARTNER_TOKEN_PREFIX'] : $response['data']['partner_token_prefix']);
+
+                if (!empty($jsOptionsOld)) {
+                    self::SetOption(
+                        'JS_TAB_OPTIONS',
+                        str_replace($partnerCodeOld, $response['data']['partner_code'], $jsOptionsOld)
+                    );
                 }
-            } elseif (empty($api_key) && empty($user_id)) {
-                self::SetOption('API_KEY', null);
-                self::SetOption('USER_ID', null);
-                self::SetOption('PARTNER_CODE', null);
-                self::SetOption('PARTNER_TOKEN_PREFIX', null);
             }
+        } elseif (empty($api_key) && empty($user_id)) {
+            self::SetOption('API_KEY', null);
+            self::SetOption('USER_ID', null);
+            self::SetOption('PARTNER_CODE', null);
+            self::SetOption('PARTNER_TOKEN_PREFIX', null);
         }
 
         self::SetOption('SETTINGS', isset($values['SETTINGS']) ? $values['SETTINGS'] : null);

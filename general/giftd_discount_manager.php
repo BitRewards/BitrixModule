@@ -84,6 +84,11 @@ class GiftdDiscountManager
         self::$_giftdDiscountAmountLeft = $amountLeft - $amount;
     }
 
+    public static function resetGetOptimalPriceCycle()
+    {
+        self::$_giftdDiscountAmountLeft = null;
+    }
+
     private static function CreateCoupon($arFields)
     {
         return ((int)CCatalogDiscountCoupon::Add($arFields)) ?: null;
@@ -234,7 +239,11 @@ class GiftdDiscountManager
     {
         if(self::Init())
         {
-            foreach (CCatalogDiscount::GetCoupons() as $coupon)
+            $coupons = CCatalogDiscount::GetCoupons();
+            if (!$coupons && self::$COUPON) {
+                $coupons[] = self::$COUPON;
+            }
+            foreach ($coupons as $coupon)
             {
                 if ($card = self::getGiftdCard($coupon)) {
                     $amount = $arFields['PRICE'] + $card->amount_available;
@@ -371,7 +380,7 @@ class GiftdDiscountManager
         }
 
         try {
-            if (isset($result['DISCOUNT_PRICE']) && isset($result['DISCOUNT']['NAME']) && isset($result['PRICE']['PRICE'])) {
+            if (isset($result['DISCOUNT_PRICE']) && isset($result['DISCOUNT']['NAME']) && isset($ result['PRICE']['PRICE'])) {
                 $originalPrice = isset($result['RESULT_PRICE']) ? $result['RESULT_PRICE']['BASE_PRICE'] : $result['PRICE']['PRICE'];
                 $bitrixDiscountId = isset($result['DISCOUNT']['ID']) ? $result['DISCOUNT']['ID'] : null;
 
