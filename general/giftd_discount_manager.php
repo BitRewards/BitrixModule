@@ -437,12 +437,20 @@ class GiftdDiscountManager
                     return true;
                 }
 
+
                 $discountBasePrice =
                     ($currentDiscountIsGiftd || $giftdCard->cannot_be_used_on_discounted_items) ?
                         $originalPrice :
                         $result['DISCOUNT_PRICE'];
 
-                $currentDiscountAmount = min($discountAmountLeft, $discountBasePrice * $quantity);
+                if ($giftdCard->cannot_be_used_on_discounted_items) {
+                    $currentDiscountAmount = $discountAmountLeft;
+                } else {
+                    $currentPriceProportion = ($discountBasePrice * $quantity) / $basketAmount;
+                    $currentDiscountAmount = $currentPriceProportion * $giftdCard->amount_available;
+                }
+
+                $currentDiscountAmount = min($currentDiscountAmount, $discountAmountLeft, $discountBasePrice * $quantity);
 
                 $singleItemDiscountValue = round(($currentDiscountAmount / $quantity) * 100) / 100;
                 $priceAfterDiscount = $discountBasePrice - $singleItemDiscountValue;

@@ -15,8 +15,8 @@ class GiftdHelper
     function CheckPatchOnBeforeProlog()
     {
         $cache = new CPHPCache();
-        if (!$cache->InitCache(60, $cacheId = 'giftd-discount-patch-check', '/')) {
-            $cache->StartDataCache(60, $cacheId, '/');
+        if (!$cache->InitCache(3600, $cacheId = 'giftd-discount-patch-check', '/') || isset($_REQUEST['giftd-discount-patch-check'])) {
+            $cache->StartDataCache(3600, $cacheId, '/');
             $cache->EndDataCache(array('time' => time()));
             $patch_source = $_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/modules/'.self::$MODULE_ID.'/general/discount_coupon.php';
             $patch_target = $_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/modules/catalog/general/discount_coupon.php';
