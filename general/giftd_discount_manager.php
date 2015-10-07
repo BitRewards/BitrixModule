@@ -443,7 +443,7 @@ class GiftdDiscountManager
                         $originalPrice :
                         $result['DISCOUNT_PRICE'];
 
-                if ($giftdCard->cannot_be_used_on_discounted_items) {
+                if ($giftdCard->cannot_be_used_on_discounted_items || !$giftdCard->is_discount_divided_equally) {
                     $currentDiscountAmount = $discountAmountLeft;
                 } else {
                     $currentPriceProportion = ($discountBasePrice * $quantity) / $basketAmount;
