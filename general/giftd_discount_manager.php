@@ -257,7 +257,7 @@ class GiftdDiscountManager
 
     private static function _fillBasketData()
     {
-        $q = CSaleBasket::GetList(Array(), Array("FUSER_ID"=>CSaleBasket::GetBasketUserID(), "ORDER_ID"=>false, "CAN_BUY" => "Y"));
+        $q = CSaleBasket::GetList(Array(), Array("FUSER_ID"=>CSaleBasket::GetBasketUserID(), "ORDER_ID"=>false, "CAN_BUY" => "Y", "DELAY" => "N"));
         self::$_basketTotalAmountWithoutDiscount = 0;
         self::$_basketTotalAmountDiscounted = 0;
         self::$_basketCount = 0;
