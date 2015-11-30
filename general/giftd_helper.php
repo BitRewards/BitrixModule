@@ -29,6 +29,11 @@ class GiftdHelper
         }
     }
 
+    public static function getApiKey()
+    {
+        return self::GetOption('API_KEY');
+    }
+
     public static function debug($arguments/*, ... */)
     {
         try {

@@ -48,7 +48,7 @@ class GiftdDiscountManager
 
     private static function _useNewCouponSystem()
     {
-        return class_exists('\Bitrix\Catalog\DiscountTable');
+        return class_exists('\Bitrix\Catalog\DiscountTable') && class_exists('\Bitrix\Sale\DiscountCouponsManager');
     }
 
     private static function CreateDiscount($arFields)
@@ -162,7 +162,11 @@ class GiftdDiscountManager
             return null;
 
         if (!isset(self::$_cardCache[$code])) {
-            self::$_cardCache[$code] = self::$_client->checkByToken($code);
+            try {
+                self::$_cardCache[$code] = self::$_client->checkByToken($code);
+            } catch (Exception $e) {
+                self::$_cardCache[$code] = null;
+            }
         }
 
         return self::$_cardCache[$code];
@@ -237,6 +241,7 @@ class GiftdDiscountManager
 
     public static function ChargeCouponOnBeforeOrderAdd(&$arFields)
     {
+
         if(self::Init())
         {
             $coupons = CCatalogDiscount::GetCoupons();
@@ -375,7 +380,7 @@ class GiftdDiscountManager
             return;
         }
 
-        if (isset($_COOKIE['giftd-debug'])) {
+        if (isset($_COOKIE['giftd-debug']) && $_COOKIE['giftd-debug'] == GiftdHelper::getApiKey()) {
             GiftdHelper::debug($result, $quantity);
         }
 

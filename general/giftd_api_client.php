@@ -29,6 +29,7 @@ class GiftdClient
         curl_setopt_array($ch, array(
             CURLOPT_POST => 1,
             CURLOPT_POSTFIELDS => $params,
+            CURLOPT_TIMEOUT => 5,
             CURLOPT_RETURNTRANSFER => 1,
             CURLOPT_SSL_VERIFYHOST => 0,
             CURLOPT_SSL_VERIFYPEER => 0,
