@@ -252,8 +252,8 @@ class GiftdDiscountManager
             {
                 if ($card = self::getGiftdCard($coupon)) {
                     $amount = $arFields['PRICE'] + $card->amount_available;
-                    $result = self::Charge($coupon, $card->amount_available, $amount);
-                    return $result;
+                    self::Charge($coupon, $card->amount_available, $amount);
+                    break;
                 }
             }
         }
