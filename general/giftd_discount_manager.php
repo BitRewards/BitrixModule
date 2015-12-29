@@ -248,13 +248,22 @@ class GiftdDiscountManager
             if (!$coupons && self::$COUPON) {
                 $coupons[] = self::$COUPON;
             }
+            /**
+             * @var Giftd_Card $maxCard
+             */
+            $maxCard = null;
             foreach ($coupons as $coupon)
             {
                 if ($card = self::getGiftdCard($coupon)) {
-                    $amount = $arFields['PRICE'] + $card->amount_available;
-                    self::Charge($coupon, $card->amount_available, $amount);
-                    break;
+                    if (!$maxCard || $maxCard->amount_available < $card->amount_available) {
+                        $maxCard = $card;
+                    }
                 }
+            }
+
+            if ($maxCard) {
+                $amount = $arFields['PRICE'] + $maxCard->amount_available;
+                self::Charge($maxCard->token, $maxCard->amount_available, $amount);
             }
         }
         return true;
@@ -331,11 +340,17 @@ class GiftdDiscountManager
             $coupons = CCatalogDiscount::GetCoupons();
         }
 
+        /**
+         * @var Giftd_Card $result
+         */
+        $result = null;
+
         foreach ($coupons as $code) {
             $card = self::getGiftdCard($code);
             if ($card->amount_available) {
-                $result = $card;
-                break;
+                if (!$result || $result->amount_available < $card->amount_available) {
+                    $result = $card;
+                }
             }
         }
 
@@ -601,7 +616,7 @@ class GiftdDiscountManager
                 if (self::Charge($coupon, $card->amount_available, $amountTotal)) {
 
                 } else {
-                    return false;
+
                 }
             }
         }
