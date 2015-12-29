@@ -48,7 +48,7 @@ class GiftdDiscountManager
 
     private static function _useNewCouponSystem()
     {
-        return class_exists('\Bitrix\Catalog\DiscountTable') && class_exists('\Bitrix\Sale\DiscountCouponsManager');
+        return class_exists('\Bitrix\Sale\Internals\DiscountCouponTable') && class_exists('\Bitrix\Sale\DiscountCouponsManager');
     }
 
     private static function CreateDiscount($arFields)
@@ -89,9 +89,65 @@ class GiftdDiscountManager
         self::$_giftdDiscountAmountLeft = null;
     }
 
-    private static function CreateCoupon($arFields)
+
+    /**
+     * @param $discountName
+     * @param $couponCode
+     * @param Giftd_Card $card
+     * @return bool|null
+     */
+    private static function _addDiscountCouponBasketRules($discountName, $couponCode, $card)
     {
-        return ((int)CCatalogDiscountCoupon::Add($arFields)) ?: null;
+        $q = CSaleDiscount::GetList(array(), $arFilter = array('NAME' => $discountName, 'ACTIVE' => 'Y', 'SITE_ID' => SITE_ID));
+        $discount = $q->GetNext();
+
+        $id_discount = $discount ? $discount['ID'] : 0;
+
+        if ($id_discount == 0) {
+            $arDiscountFields = array(
+                'ACTIVE' => 'Y',
+                'NAME' => $discountName,
+                'DISCOUNT_TYPE' => 'V',
+                'DISCOUNT_VALUE' => (float)$card->amount_available,
+                'PRICE_FROM' => $card->min_amount_total ?: null,
+                'CURRENCY' => 'RUB',
+                'NOTES' => 'Скидка, реализующая подарочную карту ' . $discountName,
+                'SITE_ID' => SITE_ID,
+                'LID' => SITE_ID,
+                'USER_GROUPS' => array(1,2,3,4,5,6,7),
+                'PRIORITY' => $card->min_amount_total ? 1 : 100
+            );
+
+            $id_discount = CSaleDiscount::Add($arDiscountFields);
+        }
+
+        if ($id_discount > 0) {
+
+            $activeTo = $card->expires ? Bitrix\Main\Type\DateTime::createFromTimestamp($card->expires) : null;
+
+            $data = array(
+                "DISCOUNT_ID" => $id_discount,
+                "ACTIVE" => "Y",
+                "ACTIVE_TO" => $activeTo,
+                "TYPE" => \Bitrix\Sale\Internals\DiscountCouponTable::TYPE_ONE_ORDER,
+                "MAX_USE" => 1,
+                "COUPON" => $couponCode,
+                'DESCRIPTION' => $card->card_title . '(' . $card->owner_name . ')',
+            );
+
+            $existingRow = self::getBitrixCoupon($couponCode);
+
+            if ($existingRow) {
+                \Bitrix\Sale\Internals\DiscountCouponTable::Update($existingRow['ID'], $data);
+                return $existingRow['ID'];
+            } else {
+                return ((int)\Bitrix\Sale\Internals\DiscountCouponTable::Add($data)) ?: null;
+            }
+        }
+
+        self::$_bitrixCouponCache = array();
+
+        return false;
     }
 
     /**
@@ -102,6 +158,10 @@ class GiftdDiscountManager
     private static function AddDiscountCoupon($coupon_code, $card)
     {
         $discountName = 'Giftd-' . ((float)$card->amount_available) . '-' . $card->min_amount_total;
+
+        if (self::_useNewCouponSystem()) {
+            return self::_addDiscountCouponBasketRules($discountName, $coupon_code, $card);
+        }
 
         $q = CCatalogDiscount::GetList(array(), $arFilter = array('NAME' => $discountName, 'ACTIVE' => 'Y', 'SITE_ID' => SITE_ID));
         $discount = $q->GetNext();
@@ -138,7 +198,7 @@ class GiftdDiscountManager
                 CCatalogDiscountCoupon::Update($existingRow['ID'], $data);
                 return $existingRow['ID'];
             } else {
-                return self::CreateCoupon($data);
+                return ((int)CCatalogDiscountCoupon::Add($data)) ?: null;
             }
         }
 
@@ -186,7 +246,13 @@ class GiftdDiscountManager
                 $q = CCatalogDiscount::GetList(array(), array('COUPON' => trim($code)));
                 $row = $q->Fetch();
             } else {
-                $couponIterator = \Bitrix\Catalog\DiscountCouponTable::getList(array(
+                $couponIterator = \Bitrix\Sale\Internals\DiscountCouponTable::getList(array(
+                    'select' => array(
+                        'ID', 'COUPON', 'DISCOUNT_ID', 'TYPE', 'ACTIVE',
+                        'USER_ID', 'MAX_USE', 'USE_COUNT', 'ACTIVE_FROM', 'ACTIVE_TO',
+                        'DISCOUNT_NAME' => 'DISCOUNT.NAME', 'DISCOUNT_ACTIVE' => 'DISCOUNT.ACTIVE',
+                        'DISCOUNT_ACTIVE_FROM' => 'DISCOUNT.ACTIVE_FROM', 'DISCOUNT_ACTIVE_TO' => 'DISCOUNT.ACTIVE_TO'
+                    ),
                     'filter' => array('=COUPON' => $code)
                 ));
 
@@ -244,26 +310,11 @@ class GiftdDiscountManager
 
         if(self::Init())
         {
-            $coupons = CCatalogDiscount::GetCoupons();
-            if (!$coupons && self::$COUPON) {
-                $coupons[] = self::$COUPON;
-            }
-            /**
-             * @var Giftd_Card $maxCard
-             */
-            $maxCard = null;
-            foreach ($coupons as $coupon)
-            {
-                if ($card = self::getGiftdCard($coupon)) {
-                    if (!$maxCard || $maxCard->amount_available < $card->amount_available) {
-                        $maxCard = $card;
-                    }
-                }
-            }
+            $card = self::getCurrentlyActiveCard(false);
 
-            if ($maxCard) {
-                $amount = $arFields['PRICE'] + $maxCard->amount_available;
-                self::Charge($maxCard->token, $maxCard->amount_available, $amount);
+            if ($card) {
+                $amount = $arFields['PRICE'] + $card->amount_available;
+                self::Charge($card->token, $card->amount_available, $amount);
             }
         }
         return true;
@@ -326,7 +377,7 @@ class GiftdDiscountManager
         ));
     }
 
-    public static function getCurrentlyActiveCard()
+    public static function getCurrentlyActiveCard($checkMinAmountTotal = true)
     {
         if (self::$_currentlyActiveCard !== false) {
             return self::$_currentlyActiveCard;
@@ -354,7 +405,7 @@ class GiftdDiscountManager
             }
         }
 
-        if ($result) {
+        if ($result && $checkMinAmountTotal) {
             $minAmountTotal = $result->min_amount_total;
             $sessionKey = self::_getSessionKey($result->token);
             if (isset($_SESSION[$sessionKey])) {
@@ -388,6 +439,10 @@ class GiftdDiscountManager
 
     public static function AdjustPriceOnGetOptimalPriceResult(&$result)
     {
+        if (self::_useNewCouponSystem()) {
+            return;
+        }
+
         $basketAmount = self::getBasketTotalWithoutDiscount();
         $quantity = self::$_lastQuantity;
 
@@ -534,36 +589,24 @@ class GiftdDiscountManager
         $result = new Bitrix\Main\EventResult(
             Bitrix\Main\EventResult::SUCCESS,
             array(
-                'mode' => Bitrix\Sale\DiscountCouponsManager::COUPON_MODE_SIMPLE,
+                'mode' => Bitrix\Sale\DiscountCouponsManager::COUPON_MODE_FULL,
                 'getData' => array('GiftdDiscountManager', 'CouponProviderGetData'),
                 'isExist' => array('GiftdDiscountManager', 'CouponProviderIsExist'),
                 'saveApplied' => array('GiftdDiscountManager', 'CouponProviderSaveApplied'),
             ),
-            self::$_module_id
+            'sale'
         );
         return $result;
     }
 
-    private static function _handleCouponProviderCalls($coupon)
+    public static function CouponProviderIsExist($coupon)
     {
-        $card = GiftdDiscountManager::getGiftdCard($coupon);
-
-        if ($card &&
-            $card->token_status == Giftd_Card::TOKEN_STATUS_OK &&
-            $card->min_amount_total <= self::getBasketTotalWithoutDiscount()
-        ) {
-            $id = self::AddDiscountCoupon($coupon, $card);
-            return self::getBitrixCoupon($coupon);
-        }
-
-        return null;
+        return static::getBitrixCoupon($coupon);
     }
-
 
     public static function CouponProviderGetData($coupon)
     {
         $card = GiftdDiscountManager::getGiftdCard($coupon);
-
         if ($card &&
             $card->token_status == Giftd_Card::TOKEN_STATUS_OK
         ) {
@@ -573,20 +616,8 @@ class GiftdDiscountManager
 
                 if ($data) {
                     $couponValid = self::getBasketTotalDiscounted() >= $card->min_amount_total;
-
-                    $data['CHECK_CODE'] =
-                        $couponValid ?
-                            0x0000 : // DiscountCouponsManager::COUPON_CHECK_OK
-                            0x0800; // DiscountCouponsManager::COUPON_CHECK_NOT_APPLIED
-
-                    $data['STATUS'] =
-                        $couponValid ?
-                            0x0004 : // DiscountCouponsManager::STATUS_APPLYED
-                            0x0008; // DiscountCouponsManager::STATUS_NOT_APPLYED
-
-                    $data['TYPE'] = 0x0002;
-                    $data['DISCOUNT_ACTIVE'] = 'Y';
                 }
+
             } else {
                 $data = CCatalogDiscountCoupon::GetList(array(), array('ID' => $id))->Fetch();
             }
@@ -595,11 +626,6 @@ class GiftdDiscountManager
         }
 
         return null;
-    }
-
-    public static function CouponProviderIsExist($coupon)
-    {
-        return ;// self::_handleCouponProviderCalls($coupon);
     }
 
     public static function CouponProviderSaveApplied($appliedCoupons, $userId, $currentTime)
