@@ -9,6 +9,7 @@ $MESS ['SETTINGS'] = "Additional settings";
 $MESS ['USER_ID'] = "User ID";
 $MESS ['PARTNER_CODE'] = "Partner's code";
 $MESS ['PARTNER_TOKEN_PREFIX'] = "Partner's token prefix";
+$MESS ['DISABLE_BASKET_RULES'] = "Disable basket rules usage";
 
 $MESS ['COMPONENT_VIEW_SETTINGS'] = "Coupons validation component";
 $MESS ["COMPONENT_IS_ACTIVE"] = "Activity";

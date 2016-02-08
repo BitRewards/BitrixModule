@@ -9,6 +9,7 @@ $MESS ['SETTINGS'] = "Дополнительные настройки";
 $MESS ['USER_ID'] = "ID пользователя Giftd (user_id)";
 $MESS ['PARTNER_CODE'] = "Код партнера Giftd";
 $MESS ['PARTNER_TOKEN_PREFIX'] = "Префикс кодов подарочных карт";
+$MESS ['DISABLE_BASKET_RULES'] = "Отключить использование правил корзины (и использовать скидки на товар)";
 
 
 $MESS ['COMPONENT_IS_ACTIVE'] = "Проверять вводимые промо-коды через Giftd API";

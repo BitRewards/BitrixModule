@@ -6,7 +6,7 @@ class GiftdHelper
 {
     static public $MODULE_ID = 'giftd.coupon';
 
-    static public $API_OPTIONS = array('API_KEY', 'USER_ID', 'PARTNER_CODE', 'PARTNER_TOKEN_PREFIX', 'SETTINGS');
+    static public $API_OPTIONS = array('API_KEY', 'USER_ID', 'PARTNER_CODE', 'PARTNER_TOKEN_PREFIX', 'SETTINGS', 'DISABLE_BASKET_RULES');
     static public $COMPONENT_OPTIONS = array('COMPONENT_IS_ACTIVE', 'COMPONENT_TEMPLATE', 'COMPONENT_TEMPLATE_JS_COUPON_FIELD_ID', 'COMPONENT_TEMPLATE_JS_CALLBACK');
     static public $TAB_OPTIONS = array('JS_TAB_IS_ACTIVE', 'JS_TAB_POSITION', 'JS_TAB_CUSTOMIZE', 'JS_TAB_OPTIONS');
 
@@ -40,7 +40,7 @@ class GiftdHelper
             $args = func_get_args();
             $content = date("d.m.Y H:i:s") . ":\n";
             foreach ($args as $i => $arg) {
-                $content .= "Argument #$i dump:\n" . (is_scalar($arg) ? $arg : var_export($arg, true)) . "\n\n";
+                $content .= "Argument #$i dump:\n" . (var_export($arg, true)) . "\n\n";
             }
 
             $client = new GiftdClient(
@@ -267,6 +267,7 @@ class GiftdHelper
 
                 self::SetOption('PARTNER_CODE', !empty($values['PARTNER_CODE']) ? $values['PARTNER_CODE'] : $response['data']['partner_code']);
                 self::SetOption('PARTNER_TOKEN_PREFIX', !empty($values['PARTNER_TOKEN_PREFIX']) ?  $values['PARTNER_TOKEN_PREFIX'] : $response['data']['partner_token_prefix']);
+                self::SetOption('DISABLE_BASKET_RULES', !empty($values['DISABLE_BASKET_RULES']) ?  1 : 0);
 
                 if (!empty($jsOptionsOld)) {
                     self::SetOption(
@@ -280,6 +281,7 @@ class GiftdHelper
             self::SetOption('USER_ID', null);
             self::SetOption('PARTNER_CODE', null);
             self::SetOption('PARTNER_TOKEN_PREFIX', null);
+            self::SetOption('DISABLE_BASKET_RULES', null);
         }
 
         self::SetOption('SETTINGS', isset($values['SETTINGS']) ? $values['SETTINGS'] : null);
@@ -336,6 +338,11 @@ class GiftdHelper
                     $html .= '<tr class="optional" '.$style.'>
                         <td class="adm-detail-content-cell-l" width="50%">'.GetMessage($key).' (JSON)</td>
                         <td class="adm-detail-content-cell-r" width="50%"><textarea name="SETTINGS" style="width: 300px; height: 200px;">' .GiftdHelper::GetOption($key).'</textarea></td>
+                      </tr>';
+                    break;
+                case 'DISABLE_BASKET_RULES':
+                    $html .= '<tr class="optional" '.$style.'>
+                        <td class="adm-detail-content-cell-r" width="100%" colspan="2"><input type="hidden" value="" name="DISABLE_BASKET_RULES" /><input type=checkbox value="1" name="DISABLE_BASKET_RULES" id="DISABLE_BASKET_RULES" ' . (GiftdHelper::GetOption($key) ? 'checked' : '') . '/> <label for="DISABLE_BASKET_RULES">' . GetMessage($key) . '</label></td>
                       </tr>';
                     break;
                 default:

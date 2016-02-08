@@ -18,6 +18,11 @@ class GiftdDiscountManager
     private static $_bitrixCouponCache = array();
     private static $_currentlyActiveCard = false;
 
+    /**
+     * @var $_lastGiftdCard Giftd_Card
+     */
+    private static $_lastGiftdCard = null;
+
     private static $_giftdDiscountAmountLeft = null;
 
     private static $_lastQuantity = null;
@@ -48,7 +53,13 @@ class GiftdDiscountManager
 
     private static function _useNewCouponSystem()
     {
-        return class_exists('\Bitrix\Sale\Internals\DiscountCouponTable') && class_exists('\Bitrix\Sale\DiscountCouponsManager');
+        static $result = null;
+
+        if ($result === null) {
+            $result = class_exists('\Bitrix\Sale\Internals\DiscountCouponTable') && class_exists('\Bitrix\Sale\DiscountCouponsManager') && !GiftdHelper::GetOption('DISABLE_BASKET_RULES');
+        }
+
+        return $result;
     }
 
     private static function CreateDiscount($arFields)
@@ -127,6 +138,7 @@ class GiftdDiscountManager
         if ($id_discount == 0) {
             $id_discount = CSaleDiscount::Add($arDiscountFields);
         } else {
+            unset($arDiscountFields['USER_GROUPS']);
             CSaleDiscount::Update($id_discount, $arDiscountFields);
         }
 
@@ -177,24 +189,28 @@ class GiftdDiscountManager
             return self::_addDiscountCouponBasketRules($discountName, $coupon_code, $card);
         }
 
-        $q = CCatalogDiscount::GetList(array(), $arFilter = array('NAME' => $discountName, 'ACTIVE' => 'Y', 'SITE_ID' => SITE_ID));
+        $arDiscountFields = array(
+            'ACTIVE' => 'N',
+            'NAME' => $discountName,
+            'VALUE_TYPE' => 'F',
+            'VALUE' => 0.01,
+            'CURRENCY' => 'RUB',
+            'NOTES' => 'Скидка, реализующая подарочную карту ' . $discountName,
+            'SITE_ID' => SITE_ID,
+        );
+
+        $q = CCatalogDiscount::GetList(array(), $arFilter = array('NAME' => $discountName, 'SITE_ID' => SITE_ID));
         $discount = $q->GetNext();
 
         $id_discount = $discount ? $discount['ID'] : 0;
 
         if ($id_discount == 0) {
-            $arDiscountFields = array(
-                'ACTIVE' => 'Y',
-                'NAME' => $discountName,
-                'VALUE_TYPE' => 'F',
-                'VALUE' => 0.01,
-                'CURRENCY' => 'RUB',
-                'NOTES' => 'Скидка, реализующая подарочную карту ' . $discountName,
-                'SITE_ID' => SITE_ID,
-            );
-
             $id_discount = self::CreateDiscount($arDiscountFields);
+        } else {
+            CCatalogDiscount::Update($id_discount, $arDiscountFields);
         }
+
+        $discountCouponId = false;
 
         if ($id_discount > 0) {
             $data = array(
@@ -203,16 +219,20 @@ class GiftdDiscountManager
                 "ONE_TIME" => "O",
                 "COUPON" => $coupon_code,
                 "DATE_APPLY" => false,
-                'DESCRIPTION' => $card->card_title . '(' . $card->owner_name . ')',
+                'DESCRIPTION' => $card->card_title . ($card->owner_name ? (' (' . $card->owner_name . ')') : ''),
             );
 
             $existingRow = self::getBitrixCoupon($coupon_code);
 
             if ($existingRow) {
                 CCatalogDiscountCoupon::Update($existingRow['ID'], $data);
-                return $existingRow['ID'];
+                $discountCouponId = $existingRow['ID'];
             } else {
-                return ((int)CCatalogDiscountCoupon::Add($data)) ?: null;
+                $discountCouponId = ((int)CCatalogDiscountCoupon::Add($data)) ?: null;
+            }
+
+            if ($discountCouponId) {
+                CCatalogDiscount::Update($id_discount, array('ACTIVE' => 'Y'));
             }
         }
 
@@ -235,9 +255,10 @@ class GiftdDiscountManager
         if (!self::looksLikeGiftdToken($code))
             return null;
 
+        $amountTotal = self::getBasketTotalDiscounted();
         if (!isset(self::$_cardCache[$code])) {
             try {
-                self::$_cardCache[$code] = self::$_client->checkByToken($code);
+                self::$_cardCache[$code] = self::$_client->checkByToken($code, $amountTotal);
             } catch (Exception $e) {
                 self::$_cardCache[$code] = null;
             }
@@ -319,8 +340,55 @@ class GiftdDiscountManager
         }
     }
 
+    public static function ChargeCouponOnBeforeOrderAdd(&$arFields)
+    {
+        if(self::Init())
+        {
+            $coupons = CCatalogDiscount::GetCoupons();
+            if (!$coupons && self::$COUPON) {
+                $coupons[] = self::$COUPON;
+            }
+            foreach ($coupons as $coupon)
+            {
+                if ($card = self::getGiftdCard($coupon)) {
+                    $amount = $arFields['PRICE'] + $card->amount_available;
+                    $result = self::Charge($coupon, $card->amount_available, $amount, date('dmYhis') . '_' . mt_rand(1, 1 << 30));
+                    self::$_lastGiftdCard = $card;
+                    break;
+                }
+            }
+        }
+        return true;
+    }
+
+    public static function UpdateExternalIdAfterOrderSave($orderId, $arFields)
+    {
+        if (!self::$_lastGiftdCard) {
+            return;
+        }
+
+        try {
+            GiftdHelper::QueryApi('gift/updateExternalId', array(
+                'token' => self::$_lastGiftdCard->token,
+                'external_id' => $orderId
+            ));
+
+            self::$_lastGiftdCard = null;
+        } catch (Exception $e) {
+
+        }
+    }
+
     public static function ChargeCouponOnOrderSave($orderId, $arFields, $arOrder, $isNew)
     {
+        self::UpdateExternalIdAfterOrderSave($orderId, $arFields);
+
+        return;
+
+        if (self::IsDebugMode()) {
+            GiftdHelper::debug("Handling OnOrderSave", func_get_args());
+        }
+
         if ($isNew && self::Init())
         {
             $discounts = isset($arOrder['DISCOUNT_LIST']) ? $arOrder['DISCOUNT_LIST'] : array();
@@ -467,6 +535,11 @@ class GiftdDiscountManager
         return 'giftd_card_applied_' . $token;
     }
 
+    private static function IsDebugMode()
+    {
+        return isset($_COOKIE['giftd-debug']) && $_COOKIE['giftd-debug'] == GiftdHelper::getApiKey();
+    }
+
     public static function AdjustPriceOnGetOptimalPriceResult(&$result)
     {
         if (self::_useNewCouponSystem()) {
@@ -480,7 +553,7 @@ class GiftdDiscountManager
             return;
         }
 
-        if (isset($_COOKIE['giftd-debug']) && $_COOKIE['giftd-debug'] == GiftdHelper::getApiKey()) {
+        if (self::IsDebugMode()) {
             GiftdHelper::debug($result, $quantity);
         }
 
@@ -661,48 +734,57 @@ class GiftdDiscountManager
     public static function CouponProviderSaveApplied($appliedCoupons, $userId, $currentTime)
     {
         return array();
-        // this function should not be called or used
-        // left here just in case of something
-
-        $result = array();
-
-        foreach ($appliedCoupons as $coupon) {
-            if ($card = self::getGiftdCard($coupon)) {
-                $amountTotal = self::getBasketTotalDiscounted() + $card->amount_available;
-                if (self::Charge($coupon, $card->amount_available, $amountTotal)) {
-
-                } else {
-
-                }
-            }
-        }
-
-        return $result;
     }
 
     public static function RestrictGiftdCouponDelete($data)
     {
-        if (!isset($data['ID'])) {
-            return;
+        if (is_scalar($data) && is_numeric($data)) {
+            $discountCouponId = $data;
+        } else {
+            if (!isset($data['ID'])) {
+                return;
+            }
+            $discountCouponId = (int)$data['ID'];
         }
-        $discountCouponId = (int)$data['ID'];
+
         global $DB;
-        $dbResult = $DB->Query("SELECT DISCOUNT_ID FROM b_sale_discount_coupon WHERE ID = $discountCouponId");
-        $row = $dbResult->Fetch();
-        if ($row && $discountId = $row['DISCOUNT_ID']) {
-            $discount = \Bitrix\Sale\Internals\DiscountTable::getById($discountId);
-            if ($data = $discount->fetch()) {
-                if (isset($data['NAME']) && strpos($data['NAME'], 'Giftd') !== false) {
-                    die("Удаление купонов Giftd не рекомендовано, т.к. может привести к тому, что скидка на корзину Giftd будет применяться ко всем заказам без исключения");
+
+        if (self::_useNewCouponSystem()) {
+            $dbResult = $DB->Query("SELECT DISCOUNT_ID FROM b_sale_discount_coupon WHERE ID = $discountCouponId");
+            $row = $dbResult->Fetch();
+            if ($row && $discountId = $row['DISCOUNT_ID']) {
+                $discount = \Bitrix\Sale\Internals\DiscountTable::getById($discountId);
+                if ($data = $discount->fetch()) {
+                    if (isset($data['NAME']) && strpos($data['NAME'], 'Giftd') !== false) {
+                        die("Удаление купонов Giftd не рекомендовано, т.к. может привести к тому, что скидка на корзину Giftd будет применяться ко всем заказам без исключения");
+                    }
+                }
+            }
+        } else {
+            $dbResult = $DB->Query("SELECT DISCOUNT_ID FROM b_catalog_discount_coupon WHERE ID = $discountCouponId");
+            $row = $dbResult->Fetch();
+            if ($row && $discountId = $row['DISCOUNT_ID']) {
+                $discount = CCatalogDiscount::GetList(array('ID' => $discountId));
+                if ($data = $discount->fetch()) {
+                    if (isset($data['NAME']) && strpos($data['NAME'], 'Giftd') !== false) {
+                        die("Удаление купонов Giftd не рекомендовано, т.к. может привести к тому, что скидка на корзину Giftd будет применяться ко всем заказам без исключения");
+                    }
                 }
             }
         }
+
+
     }
 
     public static function FixUseCouponsFlagAfterDelete()
     {
         global $DB;
-        $result = $DB->Update("b_sale_discount", array('USE_COUPONS' => "'Y'"), "WHERE NAME LIKE 'Giftd%'");
+        try {
+            $result = $DB->Update("b_sale_discount", array('USE_COUPONS' => "'Y'"), "WHERE NAME LIKE 'Giftd%'");
+        } catch (Exception $e) {
+            $result = false;
+        }
+
         if ($result) {
             die("Удаление купонов Giftd не рекомендовано, т.к. может привести к тому, что скидка на корзину Giftd будет применяться ко всем заказам без исключения");
         }

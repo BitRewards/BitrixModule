@@ -47,6 +47,9 @@ class giftd_coupon extends CModule
 		RegisterModuleDependences('sale', 'onAfterDeleteDiscountCoupons', 'giftd.coupon', 'GiftdDiscountManager', 'FixUseCouponsFlagAfterDelete');
 		RegisterModuleDependences('sale', 'DiscountCouponOnAfterDelete', 'giftd.coupon', 'GiftdDiscountManager', 'FixUseCouponsFlagAfterDelete');
 		RegisterModuleDependences('sale', 'DiscountCouponOnBeforeDelete', 'giftd.coupon', 'GiftdDiscountManager', 'RestrictGiftdCouponDelete');
+		RegisterModuleDependences('catalog', 'OnBeforeCouponDelete', 'giftd.coupon', 'GiftdDiscountManager', 'RestrictGiftdCouponDelete');
+		RegisterModuleDependences('sale', 'OnBeforeOrderAdd', 'giftd.coupon', 'GiftdDiscountManager', 'ChargeCouponOnBeforeOrderAdd');
+		RegisterModuleDependences('sale', 'OnOrderAdd', 'giftd.coupon', 'GiftdDiscountManager', 'UpdateExternalIdAfterOrderSave');
 
         return true;
 	}
@@ -66,6 +69,9 @@ class giftd_coupon extends CModule
 		UnRegisterModuleDependences('sale', 'onAfterDeleteDiscountCoupons', 'giftd.coupon', 'GiftdDiscountManager', 'FixUseCouponsFlagAfterDelete');
 		UnRegisterModuleDependences('sale', 'DiscountCouponOnAfterDelete', 'giftd.coupon', 'GiftdDiscountManager', 'FixUseCouponsFlagAfterDelete');
 		UnRegisterModuleDependences('sale', 'DiscountCouponOnBeforeDelete', 'giftd.coupon', 'GiftdDiscountManager', 'RestrictGiftdCouponDelete');
+		UnRegisterModuleDependences('catalog', 'OnBeforeCouponDelete', 'giftd.coupon', 'GiftdDiscountManager', 'RestrictGiftdCouponDelete');
+		UnRegisterModuleDependences('sale', 'OnBeforeOrderAdd', 'giftd.coupon', 'GiftdDiscountManager', 'ChargeCouponOnBeforeOrderAdd');
+		UnRegisterModuleDependences('sale', 'OnOrderAdd', 'giftd.coupon', 'GiftdDiscountManager', 'UpdateExternalIdAfterOrderSave');
 
 		UnRegisterModule($this->MODULE_ID);
 

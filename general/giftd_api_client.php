@@ -122,14 +122,16 @@ class GiftdClient
     /**
      * @param null $token
      * @param null $external_id
+     * @param float $amountTotal
      * @return Giftd_Card|null
      * @throws Giftd_Exception
      */
-    public function check($token = null, $external_id = null)
+    public function check($token = null, $external_id = null, $amountTotal = null)
     {
         $response = $this->query('gift/check', array(
             'token' => $token,
-            'external_id' => $external_id
+            'external_id' => $external_id,
+            'amount_total' => $amount_total
         ), true);
         switch ($response['type']) {
             case static::RESPONSE_TYPE_ERROR:
@@ -160,12 +162,13 @@ class GiftdClient
 
     /**
      * @param $token
+     * @param $amountTotal
      * @return Giftd_Card|null
      * @throws Giftd_Exception
      */
-    public function checkByToken($token)
+    public function checkByToken($token, $amountTotal = null)
     {
-        return $this->check($token, null);
+        return $this->check($token, null, $amountTotal);
     }
 
     /**
