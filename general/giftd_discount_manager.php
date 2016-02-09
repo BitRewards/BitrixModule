@@ -228,6 +228,10 @@ class GiftdDiscountManager
 
             $existingRow = self::getBitrixCoupon($coupon_code);
 
+            if ($existingRow['DISCOUNT_ID'] != $id_discount) {
+                CCatalogDiscount::Update($existingRow['DISCOUNT_ID'], array('ACTIVE' => 'N'));
+            }
+
             if ($existingRow) {
                 CCatalogDiscountCoupon::Update($existingRow['ID'], $data);
                 $discountCouponId = $existingRow['ID'];
@@ -382,11 +386,25 @@ class GiftdDiscountManager
                     $amount = $amountTotal + $card->amount_available;
                     $result = self::Charge($coupon, $card->amount_available, $amount, date('dmYhis') . '_' . mt_rand(1, 1 << 30));
                     self::$_lastGiftdCard = $card;
+
+                    $arFields['COMMENTS'] = self::getOrderComment($card);
                     break;
                 }
             }
         }
         return true;
+    }
+
+    private static function getOrderComment(Giftd_Card $card)
+    {
+        $cardTitle = $card->min_amount_total ? "промо-карта Giftd" : "платная карта Giftd";
+        $cardTitle .= " (код " . $card->token . ', ' . "скидка " . ((float)$card->amount_available);
+        if ($card->min_amount_total) {
+            $cardTitle .= ", мин. чек " . ((float)$card->min_amount_total);
+        }
+        $cardTitle .= ')';
+
+        return "Использована $cardTitle";
     }
 
     public static function UpdateExternalIdAfterOrderSave($orderId, $arFields)
@@ -431,14 +449,7 @@ class GiftdDiscountManager
             if ($card) {
                 $amount = $arFields['PRICE'] + $card->amount_available;
                 if ($chargeResult = self::Charge($card->token, $card->amount_available, $amount, $orderId)) {
-                    $cardTitle = $card->min_amount_total ? "промо-карта Giftd" : "платная карта Giftd";
-                    $cardTitle .= " (код " . $card->token . ', ' . "скидка " . ((float)$card->amount_available);
-                    if ($card->min_amount_total) {
-                        $cardTitle .= ", мин. чек " . ((float)$card->min_amount_total);
-                    }
-                    $cardTitle .= ')';
-
-                    CSaleOrder::Update($orderId, array('COMMENTS' => "Использована $cardTitle"));
+                    CSaleOrder::Update($orderId, array('COMMENTS' => self::getOrderComment($card)));
                 }
 
             }
