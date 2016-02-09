@@ -159,6 +159,10 @@ class GiftdDiscountManager
 
             $existingRow = self::getBitrixCoupon($couponCode);
 
+            if ($existingRow['DISCOUNT_ID'] != $id_discount) {
+                CSaleDiscount::Update($existingRow['DISCOUNT_ID'], array('ACTIVE' => 'N'));
+            }
+
             if ($existingRow) {
                 \Bitrix\Sale\Internals\DiscountCouponTable::Update($existingRow['ID'], $data);
                 $discountCouponId = $existingRow['ID'];
@@ -250,12 +254,15 @@ class GiftdDiscountManager
      * @param $code
      * @return Giftd_Card
      */
-    public static function getGiftdCard($code)
+    public static function getGiftdCard($code, $amountTotal = null)
     {
         if (!self::looksLikeGiftdToken($code))
             return null;
 
-        $amountTotal = self::getBasketTotalDiscounted();
+        if (!$amountTotal) {
+            $amountTotal = self::getBasketTotalDiscounted();
+        }
+
         if (!isset(self::$_cardCache[$code])) {
             try {
                 self::$_cardCache[$code] = self::$_client->checkByToken($code, $amountTotal);
@@ -340,18 +347,39 @@ class GiftdDiscountManager
         }
     }
 
+    public static function getCouponList()
+    {
+        if (self::_useNewCouponSystem()) {
+            $coupons = \Bitrix\Sale\DiscountCouponsManager::get();
+            $coupons = array_keys($coupons);
+        } else {
+            $coupons = CCatalogDiscount::GetCoupons();
+        }
+        if (isset($_SESSION['CATALOG_USER_COUPONS'])) {
+            foreach ($_SESSION['CATALOG_USER_COUPONS'] as $coupon) {
+                $coupons[] = $coupon;
+            }
+        }
+
+        $coupons = array_unique($coupons);
+
+        return $coupons;
+    }
+
     public static function ChargeCouponOnBeforeOrderAdd(&$arFields)
     {
         if(self::Init())
         {
-            $coupons = CCatalogDiscount::GetCoupons();
+            $coupons = self::getCouponList();
             if (!$coupons && self::$COUPON) {
                 $coupons[] = self::$COUPON;
             }
+
+            $amountTotal = $arFields['PRICE'];
             foreach ($coupons as $coupon)
             {
-                if ($card = self::getGiftdCard($coupon)) {
-                    $amount = $arFields['PRICE'] + $card->amount_available;
+                if ($card = self::getGiftdCard($coupon, $amountTotal)) {
+                    $amount = $amountTotal + $card->amount_available;
                     $result = self::Charge($coupon, $card->amount_available, $amount, date('dmYhis') . '_' . mt_rand(1, 1 << 30));
                     self::$_lastGiftdCard = $card;
                     break;
@@ -482,12 +510,7 @@ class GiftdDiscountManager
         }
 
         $result = null;
-        if (self::_useNewCouponSystem()) {
-            $coupons = \Bitrix\Sale\DiscountCouponsManager::get();
-            $coupons = array_keys($coupons);
-        } else {
-            $coupons = CCatalogDiscount::GetCoupons();
-        }
+        $coupons = self::getCouponList();
 
         /**
          * @var Giftd_Card $result
@@ -542,6 +565,8 @@ class GiftdDiscountManager
 
     public static function AdjustPriceOnGetOptimalPriceResult(&$result)
     {
+        self::UpdateCurrentlyActiveCard();
+
         if (self::_useNewCouponSystem()) {
             return;
         }
@@ -707,6 +732,23 @@ class GiftdDiscountManager
         return static::getBitrixCoupon($coupon);
     }
 
+    public static function UpdateCurrentlyActiveCard()
+    {
+        static $updated = false;
+
+        if ($updated) {
+            return;
+        }
+
+        $card = self::getCurrentlyActiveCard(false);
+        if ($card) {
+            self::AddDiscountCoupon($card->token, $card);
+        }
+
+        $updated = true;
+    }
+
+
     public static function CouponProviderGetData($coupon)
     {
         $card = GiftdDiscountManager::getGiftdCard($coupon);
@@ -772,8 +814,6 @@ class GiftdDiscountManager
                 }
             }
         }
-
-
     }
 
     public static function FixUseCouponsFlagAfterDelete()
@@ -794,6 +834,7 @@ class GiftdDiscountManager
             \Bitrix\Main\EventManager::getInstance()->addEventHandler('main', 'OnAfterEpilog', array('GiftdDiscountManager', 'FixUseCouponsFlagAfterDelete'));
         }
     }
+
 }
 
 

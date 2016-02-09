@@ -131,7 +131,7 @@ class GiftdClient
         $response = $this->query('gift/check', array(
             'token' => $token,
             'external_id' => $external_id,
-            'amount_total' => $amount_total
+            'amount_total' => $amountTotal
         ), true);
         switch ($response['type']) {
             case static::RESPONSE_TYPE_ERROR:
