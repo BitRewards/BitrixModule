@@ -559,7 +559,10 @@ class GiftdDiscountManager
             }
         }
 
-        self::$_currentlyActiveCard = $result;
+        if ($checkMinAmountTotal) {
+            self::$_currentlyActiveCard = $result;
+        }
+
 
         return $result;
     }
