@@ -384,11 +384,11 @@ class GiftdDiscountManager
             {
                 if ($card = self::getGiftdCard($coupon, $amountTotal)) {
                     $amount = $amountTotal + $card->amount_available;
-                    $result = self::Charge($coupon, $card->amount_available, $amount, date('dmYhis') . '_' . mt_rand(1, 1 << 30));
+                    if ($result = self::Charge($coupon, $card->amount_available, $amount, date('dmYhis') . '_' . mt_rand(1, 1 << 30))) {
+                        $arFields['COMMENTS'] = self::getOrderComment($card);
+                        break;
+                    }
                     self::$_lastGiftdCard = $card;
-
-                    $arFields['COMMENTS'] = self::getOrderComment($card);
-                    break;
                 }
             }
         }
