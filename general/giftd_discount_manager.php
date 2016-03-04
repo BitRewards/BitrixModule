@@ -397,14 +397,14 @@ class GiftdDiscountManager
 
     private static function getOrderComment(Giftd_Card $card)
     {
-        $cardTitle = $card->min_amount_total ? "промо-карта Giftd" : "платная карта Giftd";
-        $cardTitle .= " (код " . $card->token . ', ' . "скидка " . ((float)$card->amount_available);
+        $cardTitle = $card->min_amount_total ? "Giftd promo card" : "Giftd paid card";
+        $cardTitle .= " (code " . $card->token . ', ' . "discount " . ((float)$card->amount_available);
         if ($card->min_amount_total) {
-            $cardTitle .= ", мин. чек " . ((float)$card->min_amount_total);
+            $cardTitle .= ", min. order " . ((float)$card->min_amount_total);
         }
         $cardTitle .= ')';
 
-        return "Использована $cardTitle";
+        return "$cardTitle applied";
     }
 
     public static function UpdateExternalIdAfterOrderSave($orderId, $arFields)
