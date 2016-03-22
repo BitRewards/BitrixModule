@@ -398,28 +398,45 @@ class GiftdDiscountManager
     private static function getOrderComment(Giftd_Card $card)
     {
         $cardTitle = $card->min_amount_total ? "Giftd promo card" : "Giftd paid card";
-        $cardTitle .= " (code " . $card->token . ', ' . "discount " . ((float)$card->amount_available);
+        $cardTitle .= " (discount " . ((float)$card->amount_available);
         if ($card->min_amount_total) {
             $cardTitle .= ", min. order " . ((float)$card->min_amount_total);
         }
         $cardTitle .= ')';
 
-        return "$cardTitle applied";
+        return "$cardTitle applied // " . $card->token;
+    }
+
+    private static function getTokenByOrderComment($comment)
+    {
+        if (strpos($comment, 'Giftd') !== 0) {
+            return null;
+        }
+
+        $parts = explode("//", $comment);
+
+        if (count($parts) != 2) {
+            return null;
+        }
+
+        return trim($parts[2]);
     }
 
     public static function UpdateExternalIdAfterOrderSave($orderId, $arFields)
     {
-        if (!self::$_lastGiftdCard) {
-            return;
+        if (!isset($arFields['COMMENTS'])) {
+            return null;
+        }
+
+        if (!($token = self::getTokenByOrderComment($arFields['COMMENTS']))) {
+            return null;
         }
 
         try {
             GiftdHelper::QueryApi('gift/updateExternalId', array(
-                'token' => self::$_lastGiftdCard->token,
+                'token' => $token,
                 'external_id' => $orderId
             ));
-
-            self::$_lastGiftdCard = null;
         } catch (Exception $e) {
 
         }

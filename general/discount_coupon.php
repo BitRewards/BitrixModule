@@ -6,7 +6,7 @@ eval('namespace giftdpatched; use \CCatalogDiscountCoupon as CCatalogDiscountCou
 
 class CAllCatalogDiscountCoupon extends giftdpatched\CAllCatalogDiscountCoupon
 {
-    public static function SetCoupon($coupon)
+    public function SetCoupon($coupon)
     {
         $result = parent::SetCoupon($coupon);
 
