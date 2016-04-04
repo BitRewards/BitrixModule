@@ -355,10 +355,17 @@ class GiftdDiscountManager
     {
         if (self::_useNewCouponSystem()) {
             $coupons = \Bitrix\Sale\DiscountCouponsManager::get();
-            $coupons = array_keys($coupons);
+            if ($coupons) {
+                $coupons = array_keys($coupons);
+            }
         } else {
             $coupons = CCatalogDiscount::GetCoupons();
         }
+
+        if (!$coupons) {
+            $coupons = array();
+        }
+
         if (isset($_SESSION['CATALOG_USER_COUPONS'])) {
             foreach ($_SESSION['CATALOG_USER_COUPONS'] as $coupon) {
                 $coupons[] = $coupon;
@@ -419,7 +426,7 @@ class GiftdDiscountManager
             return null;
         }
 
-        return trim($parts[2]);
+        return trim($parts[1]);
     }
 
     public static function UpdateExternalIdAfterOrderSave($orderId, $arFields)

@@ -25,8 +25,8 @@ class giftd_coupon extends CModule
 		$this->MODULE_VERSION = $arModuleVersion["VERSION"];
 		$this->MODULE_VERSION_DATE = $arModuleVersion["VERSION_DATE"];
 
-		$this->MODULE_NAME = GetMessage("MODULE_NAME");
-		$this->MODULE_DESCRIPTION = GetMessage("MODULE_DESCRIPTION");
+		$this->MODULE_NAME = GetMessage("GIFTD_MODULE_NAME");
+		$this->MODULE_DESCRIPTION = GetMessage("GIFTD_MODULE_DESCRIPTION");
         $this->PARTNER_NAME = "Giftd";
         $this->PARTNER_URI = "https://partner.giftd.ru";
     }

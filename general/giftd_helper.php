@@ -12,8 +12,17 @@ class GiftdHelper
 
     private static $_optionsCache = array();
 
-    function CheckPatchOnBeforeProlog()
+    public static function isBitrixVersionNewerThen15()
     {
+        return version_compare(SM_VERSION, "15.0.0") >= 0;
+    }
+
+    public static function CheckPatchOnBeforeProlog()
+    {
+        if (static::isBitrixVersionNewerThen15()) {
+            return;
+        }
+
         $cache = new CPHPCache();
         if (!$cache->InitCache(3600, $cacheId = 'giftd-discount-patch-check', '/') || isset($_REQUEST['giftd-discount-patch-check'])) {
             $cache->StartDataCache(3600, $cacheId, '/');
