@@ -422,11 +422,13 @@ class GiftdDiscountManager
 
         $parts = explode("//", $comment);
 
-        if (count($parts) != 2) {
+        if (count($parts) < 2) {
             return null;
         }
 
-        return trim($parts[1]);
+        $nextParts = preg_split("/\s+/", $parts[1], -1, PREG_SPLIT_NO_EMPTY);
+
+        return trim($nextParts[0]);
     }
 
     public static function UpdateExternalIdAfterOrderSave($orderId, $arFields)
@@ -483,11 +485,16 @@ class GiftdDiscountManager
 
     private static function _fillBasketData()
     {
-        $q = CSaleBasket::GetList(Array(), Array("FUSER_ID"=>CSaleBasket::GetBasketUserID(), "ORDER_ID"=>false, "CAN_BUY" => "Y", "DELAY" => "N"));
+
         self::$_basketTotalAmountWithoutDiscount = 0;
         self::$_basketTotalAmountDiscounted = 0;
         self::$_basketCount = 0;
         self::$_basketCountWithoutDiscounted = 0;
+        if (!class_exists('CSaleBasket')) {
+            return;
+        }
+        $q = CSaleBasket::GetList(Array(), Array("FUSER_ID"=>CSaleBasket::GetBasketUserID(), "ORDER_ID"=>false, "CAN_BUY" => "Y", "DELAY" => "N"));
+
         while ($item = $q->GetNext()) {
             self::$_basketTotalAmountWithoutDiscount += ($item["PRICE"] + (isset($item['DISCOUNT_PRICE']) ? $item['DISCOUNT_PRICE'] : 0)) * $item["QUANTITY"];
             self::$_basketTotalAmountDiscounted += $item['PRICE'] * $item['QUANTITY'];
