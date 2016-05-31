@@ -74,6 +74,8 @@ class GiftdHelper
     {
         global $APPLICATION;
 
+        self::handleOrderCheckStatusQuery();
+
         if (self::IsSetModuleSettings() &&
             (!defined('ADMIN_SECTION') || !ADMIN_SECTION) &&
             (!isset($_SERVER['REQUEST_URI']) || strpos($_SERVER['REQUEST_URI'], '/admin/') === false) &&
@@ -85,6 +87,8 @@ class GiftdHelper
 
             define('GIFTD_JS_CODE_INSERTED', 1);
         }
+
+
     }
 
     public static function ReplaceTopWithParentOnAfterEpilog()
@@ -307,20 +311,44 @@ class GiftdHelper
     }
 };';
     }
+    
+    public static function handleOrderCheckStatusQuery()
+    {
+        if (isset($_REQUEST['giftd-check-order-status']) && $_REQUEST['giftd-check-order-status'] == self::getApiKey()) {
+
+            if (isset($_REQUEST['giftd-order-id'])) {
+                if (CModule::IncludeModule('sale')) {
+                    $order = CSaleOrder::GetByID($_REQUEST['giftd-order-id']);
+                    if ($order) {
+                        $status = isset($order['STATUS_ID']) ? $order['STATUS_ID'] : null;
+                        $totalAmount = isset($order['PRICE']) ? $order['PRICE'] : null;
+                        if (isset($order['PRICE_DELIVERY'])) {
+                            $totalAmount -= $order['PRICE_DELIVERY'];
+                        }
+
+                        $params = [
+                            'order_id' => $order['ID'],
+                            'status' => ($status === 'F' || $status === 'P') ? 'confirmed' : 'rejected',
+                            'amount_total' => $totalAmount
+                        ];
+
+                        self::QueryApi('gift/updateOrderStatus', $params);
+                    }
+                }
+            }
+        } 
+    }
 
     public static function getJSTabScript()
     {
-        $KEY_CODE_UPDATED = 'JS_CODE_UPDATED_' . SITE_ID;
         $KEY_CODE = 'JS_CODE_' . SITE_ID;
 
-        $jsUpdated = (int)self::GetOption($KEY_CODE_UPDATED);
-        if ((time() - $jsUpdated) > 86400 || isset($_REQUEST['giftd-update-js']) || !($code = self::GetOption($KEY_CODE))) {
+        if ((isset($_REQUEST['giftd-update-js']) && $_REQUEST['giftd-update-js'] == self::getApiKey()) || !($code = self::GetOption($KEY_CODE))) {
             try {
                 $apiResponse = self::QueryApi('partner/getJs');
                 $code = isset($apiResponse['data']['js']) ? $apiResponse['data']['js'] : "";
 
                 self::SetOption($KEY_CODE, $code);
-                self::SetOption($KEY_CODE_UPDATED, time());
             } catch (Exception $e) {
                 self::debug("Exception while update Giftd JS code: " . $e->getMessage());
                 $code = "";
@@ -328,7 +356,7 @@ class GiftdHelper
         }
         return "<script>$code</script>";
     }
-
+    
     function MakeModuleOptionsHtml()
     {
         $has_options_set = self::IsSetModuleSettings();
