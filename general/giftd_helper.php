@@ -316,24 +316,30 @@ class GiftdHelper
     {
         if (isset($_REQUEST['giftd-check-order-status']) && $_REQUEST['giftd-check-order-status'] == self::getApiKey()) {
 
-            if (isset($_REQUEST['giftd-order-id'])) {
+            if (isset($_REQUEST['giftd-order-ids'])) {
                 if (CModule::IncludeModule('sale')) {
-                    $order = CSaleOrder::GetByID($_REQUEST['giftd-order-id']);
-                    if ($order) {
-                        $status = isset($order['STATUS_ID']) ? $order['STATUS_ID'] : null;
-                        $totalAmount = isset($order['PRICE']) ? $order['PRICE'] : null;
-                        if (isset($order['PRICE_DELIVERY'])) {
-                            $totalAmount -= $order['PRICE_DELIVERY'];
-                        }
+                    $ids = $_REQUEST['giftd-order-ids'];
+                    $ids = explode(",", $ids);
+                    $ids = array_splice($ids, 0, 100);
+                    foreach ($ids as $id) {
+                        $order = CSaleOrder::GetByID($id);
+                        if ($order) {
+                            $status = isset($order['STATUS_ID']) ? $order['STATUS_ID'] : null;
+                            $totalAmount = isset($order['PRICE']) ? $order['PRICE'] : null;
+                            if (isset($order['PRICE_DELIVERY'])) {
+                                $totalAmount -= $order['PRICE_DELIVERY'];
+                            }
 
-                        $params = [
-                            'order_id' => $order['ID'],
-                            'status' => ($status === 'F' || $status === 'P') ? 'confirmed' : 'rejected',
-                            'amount_total' => $totalAmount
-                        ];
+                            $params = [
+                                'order_id' => $order['ID'],
+                                'status' => ($status === 'F' || $status === 'P') ? 'confirmed' : 'rejected',
+                                'amount_total' => $totalAmount
+                            ];
 
-                        self::QueryApi('gift/updateOrderStatus', $params);
+                            self::QueryApi('gift/updateOrderStatus', $params);
+                        }    
                     }
+                    
                 }
             }
         } 
