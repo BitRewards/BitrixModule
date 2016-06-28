@@ -330,11 +330,11 @@ class GiftdHelper
                                 $totalAmount -= $order['PRICE_DELIVERY'];
                             }
 
-                            $params = [
+                            $params = array(
                                 'order_id' => $order['ID'],
                                 'status' => ($status === 'F' || $status === 'P') ? 'confirmed' : 'rejected',
                                 'amount_total' => $totalAmount
-                            ];
+                            );
 
                             self::QueryApi('gift/updateOrderStatus', $params);
                         }    
