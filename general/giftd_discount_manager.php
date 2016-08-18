@@ -377,11 +377,43 @@ class GiftdDiscountManager
         return $coupons;
     }
 
-    public static function ChargeCouponOnBeforeOrderAdd(&$arFields)
+    public static function ChargeCouponOnBeforeOrderAddD7Events($orderObject)
     {
+        /**
+         * @var \Bitrix\Sale\Order $orderObject
+         */
+
         if(self::Init())
         {
             $coupons = self::getCouponList();
+
+            if (!$coupons && self::$COUPON) {
+                $coupons[] = self::$COUPON;
+            }
+
+            $amountTotal = $orderObject->getPrice();
+            foreach ($coupons as $coupon)
+            {
+                if ($card = self::getGiftdCard($coupon, $amountTotal)) {
+                    $amount = $amountTotal + $card->amount_available;
+                    $result = self::Charge($coupon, $card->amount_available, $amount, date('dmYhis') . '_' . mt_rand(1, 1 << 30));
+                    if ($result) {
+                        self::$_lastGiftdCard = $card;
+                        $orderObject->setField("COMMENTS", self::getOrderComment($card));
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    public static function ChargeCouponOnBeforeOrderAdd(&$arFields)
+    {
+
+        if(self::Init())
+        {
+            $coupons = self::getCouponList();
+
             if (!$coupons && self::$COUPON) {
                 $coupons[] = self::$COUPON;
             }
@@ -434,6 +466,14 @@ class GiftdDiscountManager
 
     public static function UpdateExternalIdAfterOrderSave($orderId, $arFields)
     {
+        static $alreadyCalled = false;
+
+        if ($alreadyCalled) {
+            return;
+        }
+
+        $alreadyCalled = true;
+
         if (isset($arFields['COMMENTS'])) {
             if (!($token = self::getTokenByOrderComment($arFields['COMMENTS']))) {
                 return null;
@@ -456,36 +496,38 @@ class GiftdDiscountManager
         }
     }
 
+    public static function UpdateExternalIdAfterOrderSaveD7Events($orderObject)
+    {
+        /**
+         * @var \Bitrix\Sale\Order $orderObject
+         */
+
+        if ($comment = $orderObject->getField("COMMENTS")) {
+            if (!($token = self::getTokenByOrderComment($comment))) {
+                return null;
+            }
+        } else {
+            $card = self::$_lastGiftdCard;
+            if (!$card) {
+                return null;
+            }
+            $token = $card->token;
+        }
+
+        try {
+            GiftdHelper::QueryApi('gift/updateExternalId', array(
+                'token' => $token,
+                'external_id' => $orderObject->getId()
+            ));
+        } catch (Exception $e) {
+
+        }
+    }
+
+
     public static function ChargeCouponOnOrderSave($orderId, $arFields, $arOrder, $isNew)
     {
         self::UpdateExternalIdAfterOrderSave($orderId, $arFields);
-
-        return;
-
-        if (self::IsDebugMode()) {
-            GiftdHelper::debug("Handling OnOrderSave", func_get_args());
-        }
-
-        if ($isNew && self::Init())
-        {
-            $discounts = isset($arOrder['DISCOUNT_LIST']) ? $arOrder['DISCOUNT_LIST'] : array();
-            $card = null;
-            foreach ($discounts as $arDiscount) {
-                $code = isset($arDiscount['COUPON']['COUPON']) ? $arDiscount['COUPON']['COUPON'] : null;
-                if ($code) {
-                    $card = self::getGiftdCard($code);
-                }
-            }
-
-            if ($card) {
-                $amount = $arFields['PRICE'] + $card->amount_available;
-                if ($chargeResult = self::Charge($card->token, $card->amount_available, $amount, $orderId)) {
-                    CSaleOrder::Update($orderId, array('COMMENTS' => self::getOrderComment($card)));
-                }
-
-            }
-        }
-        return true;
     }
 
     private static function _fillBasketData()

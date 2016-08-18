@@ -38,18 +38,21 @@ class giftd_coupon extends CModule
         RegisterModuleDependences('main', 'OnBeforeProlog', $this->MODULE_ID, 'GiftdHelper', 'CheckPatchOnBeforeProlog');
         RegisterModuleDependences('main', 'OnBeforeProlog', $this->MODULE_ID, 'GiftdHelper', 'InjectJSTabScriptOnBeforeProlog');
         RegisterModuleDependences('main', 'OnAfterEpilog', $this->MODULE_ID, 'GiftdHelper', 'ReplaceTopWithParentOnAfterEpilog');
-		RegisterModuleDependences('sale', 'OnOrderSave', $this->MODULE_ID, 'GiftdDiscountManager', 'ChargeCouponOnOrderSave');
         RegisterModuleDependences('catalog', 'OnGetOptimalPrice', $this->MODULE_ID, 'GiftdDiscountManager', 'AdjustPriceOnGetOptimalPrice');
         RegisterModuleDependences('catalog', 'OnGetOptimalPriceResult', $this->MODULE_ID, 'GiftdDiscountManager', 'AdjustPriceOnGetOptimalPriceResult');
+        RegisterModuleDependences('catalog', 'OnBeforeCouponDelete', 'giftd.coupon', 'GiftdDiscountManager', 'RestrictGiftdCouponDelete');
 
         RegisterModuleDependences('sale', 'onBuildCouponProviders', $this->MODULE_ID, 'GiftdDiscountManager', 'OnBuildCouponProviders');
+        RegisterModuleDependences('sale', 'onAfterDeleteDiscountCoupons', 'giftd.coupon', 'GiftdDiscountManager', 'FixUseCouponsFlagAfterDelete');
+        RegisterModuleDependences('sale', 'DiscountCouponOnAfterDelete', 'giftd.coupon', 'GiftdDiscountManager', 'FixUseCouponsFlagAfterDelete');
+        RegisterModuleDependences('sale', 'DiscountCouponOnBeforeDelete', 'giftd.coupon', 'GiftdDiscountManager', 'RestrictGiftdCouponDelete');
 
-		RegisterModuleDependences('sale', 'onAfterDeleteDiscountCoupons', 'giftd.coupon', 'GiftdDiscountManager', 'FixUseCouponsFlagAfterDelete');
-		RegisterModuleDependences('sale', 'DiscountCouponOnAfterDelete', 'giftd.coupon', 'GiftdDiscountManager', 'FixUseCouponsFlagAfterDelete');
-		RegisterModuleDependences('sale', 'DiscountCouponOnBeforeDelete', 'giftd.coupon', 'GiftdDiscountManager', 'RestrictGiftdCouponDelete');
-		RegisterModuleDependences('catalog', 'OnBeforeCouponDelete', 'giftd.coupon', 'GiftdDiscountManager', 'RestrictGiftdCouponDelete');
+        RegisterModuleDependences('sale', 'OnOrderSave', $this->MODULE_ID, 'GiftdDiscountManager', 'ChargeCouponOnOrderSave');
 		RegisterModuleDependences('sale', 'OnBeforeOrderAdd', 'giftd.coupon', 'GiftdDiscountManager', 'ChargeCouponOnBeforeOrderAdd');
 		RegisterModuleDependences('sale', 'OnOrderAdd', 'giftd.coupon', 'GiftdDiscountManager', 'UpdateExternalIdAfterOrderSave');
+
+        RegisterModuleDependences('sale', 'OnSaleOrderBeforeSaved', $this->MODULE_ID, 'GiftdDiscountManager', 'ChargeCouponOnBeforeOrderAddD7Events');
+        RegisterModuleDependences('sale', 'OnSaleOrderEntitySaved', $this->MODULE_ID, 'GiftdDiscountManager', 'UpdateExternalIdAfterOrderSaveD7Events');
 
         return true;
 	}
@@ -72,6 +75,10 @@ class giftd_coupon extends CModule
 		UnRegisterModuleDependences('catalog', 'OnBeforeCouponDelete', 'giftd.coupon', 'GiftdDiscountManager', 'RestrictGiftdCouponDelete');
 		UnRegisterModuleDependences('sale', 'OnBeforeOrderAdd', 'giftd.coupon', 'GiftdDiscountManager', 'ChargeCouponOnBeforeOrderAdd');
 		UnRegisterModuleDependences('sale', 'OnOrderAdd', 'giftd.coupon', 'GiftdDiscountManager', 'UpdateExternalIdAfterOrderSave');
+
+
+        UnRegisterModuleDependences('sale', 'OnSaleOrderBeforeSaved', 'giftd.coupon', 'GiftdDiscountManager', 'ChargeCouponOnBeforeOrderAddD7Events');
+        UnRegisterModuleDependences('sale', 'OnSaleOrderEntitySaved', 'giftd.coupon', 'GiftdDiscountManager', 'UpdateExternalIdAfterOrderSaveD7Events');
 
 		UnRegisterModule($this->MODULE_ID);
 
