@@ -10,8 +10,8 @@ class giftd_coupon extends CModule
 	var $MODULE_ID = "giftd.coupon";
 	var $MODULE_VERSION;
 	var $MODULE_VERSION_DATE;
-	var $MODULE_NAME;
-	var $MODULE_DESCRIPTION;
+	var $MODULE_NAME = "GIFTD";
+	var $MODULE_DESCRIPTION = "GIFTD.TECH Integration Module";
 	var $MODULE_GROUP_RIGHTS = "Y";
 
 	function giftd_coupon()
@@ -25,8 +25,14 @@ class giftd_coupon extends CModule
 		$this->MODULE_VERSION = $arModuleVersion["VERSION"];
 		$this->MODULE_VERSION_DATE = $arModuleVersion["VERSION_DATE"];
 
-		$this->MODULE_NAME = GetMessage("GIFTD_MODULE_NAME");
-		$this->MODULE_DESCRIPTION = GetMessage("GIFTD_MODULE_DESCRIPTION");
+		if ($message = GetMessage("GIFTD_MODULE_NAME")) {
+            $this->MODULE_NAME = $message;
+        }
+
+        if ($message = GetMessage("GIFTD_MODULE_DESCRIPTION")) {
+            $this->MODULE_DESCRIPTION = $message;
+        }
+
         $this->PARTNER_NAME = "Giftd";
         $this->PARTNER_URI = "https://partner.giftd.ru";
     }
@@ -88,7 +94,7 @@ class giftd_coupon extends CModule
 
 	function InstallFiles()
 	{
-		CopyDirFiles($_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/modules/'.$this->MODULE_ID.'/install/components', $_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/components', true, true);
+		// CopyDirFiles($_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/modules/'.$this->MODULE_ID.'/install/components', $_SERVER["DOCUMENT_ROOT"].BX_ROOT.'/components', true, true);
 
         return true;
 	}
