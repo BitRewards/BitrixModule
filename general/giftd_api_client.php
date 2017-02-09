@@ -247,6 +247,7 @@ class Giftd_Card
     public $token_status;
     public $charge_details;
     public $token;
+    public $discount_percent;
 }
 
 /**

@@ -135,6 +135,11 @@ class GiftdDiscountManager
             'USE_COUPONS' => 'Y',
         );
 
+        if ($card->discount_percent && !$card->amount_available) {
+            $arDiscountFields['DISCOUNT_TYPE'] = 'P';
+            $arDiscountFields['DISCOUNT_VALUE'] = (float)$card->discount_percent;
+        }
+
         if ($id_discount == 0) {
             $id_discount = CSaleDiscount::Add($arDiscountFields);
         } else {
@@ -187,7 +192,15 @@ class GiftdDiscountManager
      */
     private static function AddDiscountCoupon($coupon_code, $card)
     {
-        $discountName = 'Giftd-' . ((float)$card->amount_available) . '-' . $card->min_amount_total;
+        if ($card->discount_percent) {
+            $discountName = 'Giftd-' . ((float)$card->discount_percent) . '%';
+            if ($card->min_amount_total) {
+                $discountName .= '-' . $card->min_amount_total;
+            }
+        } else {
+            $discountName = 'Giftd-' . ((float)$card->amount_available) . '-' . $card->min_amount_total;
+        }
+
 
         if (self::_useNewCouponSystem()) {
             return self::_addDiscountCouponBasketRules($discountName, $coupon_code, $card);
