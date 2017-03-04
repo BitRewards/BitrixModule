@@ -249,6 +249,14 @@ class GiftdHelper
         if(!isset($values['JS_TAB_CUSTOMIZE']))
             $values['JS_TAB_CUSTOMIZE'] = null;
 
+        if (class_exists('Option')) {
+            if ((string)Option::get('sale', 'use_sale_discount_only') == 'Y') {
+                echo "Пожалуйста, снимите галочку «Использовать только правила корзины» в настройках модуля «Интернет-магазин». К сожалению, она блокирует работу модуля GIFTD.";
+                die;
+            }
+        }
+
+
         $component_settings = new GiftdComponentSettings(self::$MODULE_ID, new GenericHtmlBuilder());
         $tab_settings = new GiftdTabSettings(self::$MODULE_ID, new GenericHtmlBuilder());
 

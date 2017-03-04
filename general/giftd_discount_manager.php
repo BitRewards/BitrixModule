@@ -487,6 +487,8 @@ class GiftdDiscountManager
 
         $alreadyCalled = true;
 
+        self::SendOrderDataToGiftdCrm($orderId);
+
         if (isset($arFields['COMMENTS'])) {
             if (!($token = self::getTokenByOrderComment($arFields['COMMENTS']))) {
                 return null;
@@ -509,11 +511,59 @@ class GiftdDiscountManager
         }
     }
 
+    public static function SendOrderDataToGiftdCrm($orderId)
+    {
+        static $alreadyCalled = false;
+
+        if ($alreadyCalled) {
+            return;
+        }
+
+        $alreadyCalled = true;
+
+        try {
+            $orderData = CSaleOrder::GetByID($orderId);
+            $orderData['COOKIES'] = $_COOKIE;
+
+            $user = CSaleOrder::GetByID($orderData['USER_ID']);
+            $orderData['USER'] = $user;
+
+            $token = null;
+            if (isset($arFields['COMMENTS'])) {
+                $token = self::getTokenByOrderComment($arFields['COMMENTS']);
+            } else {
+                $card = self::$_lastGiftdCard;
+                if ($card) {
+                    $token = $card->token;
+                }
+            }
+            $orderData['PROMO_CODE'] = $token;
+
+            $dbResult = CSaleOrderPropsValue::GetOrderProps($orderId);
+            $properties = [];
+            while ($arProps = $dbResult->Fetch()) {
+                $properties[] = $arProps;
+            }
+
+            $orderData['PROPERTIES'] = $properties;
+
+            $orderData['__CMS__'] = 'bitrix';
+
+            GiftdHelper::QueryApi('cmsModule/orderUpdate', ['__data__' => json_encode($orderData)]);
+        } catch (Exception $e) {
+            if (isset($_COOKIE['giftd-debug'])) {
+                throw $e;
+            }
+        }
+    }
+
     public static function UpdateExternalIdAfterOrderSaveD7Events($orderObject)
     {
         /**
          * @var \Bitrix\Sale\Order $orderObject
          */
+
+        self::SendOrderDataToGiftdCrm($orderObject->getId());
 
         if ($comment = $orderObject->getField("COMMENTS")) {
             if (!($token = self::getTokenByOrderComment($comment))) {
