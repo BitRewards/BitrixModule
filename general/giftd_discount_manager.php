@@ -135,7 +135,7 @@ class GiftdDiscountManager
             'USE_COUPONS' => 'Y',
         );
 
-        if ($card->discount_percent && !$card->amount_available) {
+        if ($card->isStrictlyPercentageDiscount()) {
             $arDiscountFields['DISCOUNT_TYPE'] = 'P';
             $arDiscountFields['DISCOUNT_VALUE'] = (float)$card->discount_percent;
         }
@@ -215,6 +215,11 @@ class GiftdDiscountManager
             'NOTES' => 'Скидка, реализующая подарочную карту ' . $discountName,
             'SITE_ID' => SITE_ID,
         );
+
+        if ($card->isStrictlyPercentageDiscount()) {
+            $arDiscountFields['VALUE_TYPE'] = 'P';
+            $arDiscountFields['VALUE'] = (float)$card->discount_percent;
+        }
 
         $q = CCatalogDiscount::GetList(array(), $arFilter = array('NAME' => $discountName, 'SITE_ID' => SITE_ID));
         $discount = $q->GetNext();
@@ -487,8 +492,6 @@ class GiftdDiscountManager
 
         $alreadyCalled = true;
 
-        self::SendOrderDataToGiftdCrm($orderId);
-
         if (isset($arFields['COMMENTS'])) {
             if (!($token = self::getTokenByOrderComment($arFields['COMMENTS']))) {
                 return null;
@@ -519,8 +522,6 @@ class GiftdDiscountManager
             return;
         }
 
-        $alreadyCalled = true;
-
         try {
             $orderData = CSaleOrder::GetByID($orderId);
             $orderData['COOKIES'] = $_COOKIE;
@@ -545,6 +546,10 @@ class GiftdDiscountManager
                 $properties[] = $arProps;
             }
 
+            if ($properties) {
+                $alreadyCalled = true;
+            }
+
             $orderData['PROPERTIES'] = $properties;
 
             $orderData['__CMS__'] = 'bitrix';
@@ -562,8 +567,6 @@ class GiftdDiscountManager
         /**
          * @var \Bitrix\Sale\Order $orderObject
          */
-
-        self::SendOrderDataToGiftdCrm($orderObject->getId());
 
         if ($comment = $orderObject->getField("COMMENTS")) {
             if (!($token = self::getTokenByOrderComment($comment))) {
@@ -591,6 +594,8 @@ class GiftdDiscountManager
     public static function ChargeCouponOnOrderSave($orderId, $arFields, $arOrder, $isNew)
     {
         self::UpdateExternalIdAfterOrderSave($orderId, $arFields);
+
+        self::SendOrderDataToGiftdCrm($orderId);
     }
 
     private static function _fillBasketData()
@@ -737,12 +742,16 @@ class GiftdDiscountManager
             GiftdHelper::debug($result, $quantity);
         }
 
+        $giftdCard = self::getCurrentlyActiveCard();
+
+        if ($giftdCard && $giftdCard->isStrictlyPercentageDiscount()) {
+            return;
+        }
+
         try {
             if (isset($result['DISCOUNT_PRICE']) && isset($result['DISCOUNT']['NAME']) && isset($result['PRICE']['PRICE'])) {
                 $originalPrice = isset($result['RESULT_PRICE']) ? $result['RESULT_PRICE']['BASE_PRICE'] : $result['PRICE']['PRICE'];
                 $bitrixDiscountId = isset($result['DISCOUNT']['ID']) ? $result['DISCOUNT']['ID'] : null;
-
-                $giftdCard = self::getCurrentlyActiveCard();
 
                 $discountAmountLeft = $giftdCard ?
                     min($basketAmount, (float)self::_getGiftdDiscountAmountLeft($giftdCard)) :

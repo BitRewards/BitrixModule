@@ -248,6 +248,11 @@ class Giftd_Card
     public $charge_details;
     public $token;
     public $discount_percent;
+
+    public function isStrictlyPercentageDiscount()
+    {
+        return $this->discount_percent && !$this->amount_available;
+    }
 }
 
 /**
