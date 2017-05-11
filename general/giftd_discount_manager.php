@@ -541,7 +541,7 @@ class GiftdDiscountManager
             $orderData['PROMO_CODE'] = $token;
 
             $dbResult = CSaleOrderPropsValue::GetOrderProps($orderId);
-            $properties = [];
+            $properties = array();
             while ($arProps = $dbResult->Fetch()) {
                 $properties[] = $arProps;
             }
@@ -554,7 +554,7 @@ class GiftdDiscountManager
 
             $orderData['__CMS__'] = 'bitrix';
 
-            GiftdHelper::QueryApi('cmsModule/orderUpdate', ['__data__' => json_encode($orderData)]);
+            GiftdHelper::QueryApi('cmsModule/orderUpdate', array('__data__' => json_encode($orderData)));
         } catch (Exception $e) {
             if (isset($_COOKIE['giftd-debug'])) {
                 throw $e;

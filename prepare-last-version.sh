@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 cd ../
 
 VERSION=`php repo/make-version-distr.php`

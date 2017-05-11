@@ -20,7 +20,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"] . $_POST["Apply"] .
 ?>
 
 <form method="post" name="giftd_settings"
-      action="<? echo $APPLICATION->GetCurPage() ?>?mid=<?= urlencode($module_id) ?>&lang=<?= urlencode(LANGUAGE_ID) ?>"
+      action="<?php echo $APPLICATION->GetCurPage() ?>?mid=<?= urlencode($module_id) ?>&lang=<?= urlencode(LANGUAGE_ID) ?>"
       enctype="multipart/form-data">
     <?
     $aTabs = array(
@@ -39,26 +39,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"] . $_POST["Apply"] .
     }
     ?>
 
-    <? $tabControl->Buttons(); ?>
+    <?php $tabControl->Buttons(); ?>
     <input type="hidden" name="siteTabControl_active_tab"
            value="<?= htmlspecialcharsbx($_REQUEST["siteTabControl_active_tab"]) ?>">
-    <? if ($_REQUEST["back_url_settings"] <> ''): ?>
+    <?php if ($_REQUEST["back_url_settings"] <> ''): ?>
         <input type="submit" name="Update" value="<?= GetMessage("MAIN_SAVE") ?>"
                title="<?= GetMessage("MAIN_OPT_SAVE_TITLE") ?>">
-    <? endif ?>
+    <?php endif ?>
     <input type="submit" name="Apply" value="<?= GetMessage("MAIN_OPT_APPLY") ?>"
            title="<?= GetMessage("MAIN_OPT_APPLY_TITLE") ?>">
-    <? if ($_REQUEST["back_url_settings"] <> ''): ?>
+    <?php if ($_REQUEST["back_url_settings"] <> ''): ?>
         <input type="button" name="Cancel" value="<?= GetMessage("MAIN_OPT_CANCEL") ?>"
                title="<?= GetMessage("MAIN_OPT_CANCEL_TITLE") ?>"
-               onclick="window.location='<? echo htmlspecialcharsbx(CUtil::addslashes($_REQUEST["back_url_settings"])) ?>'">
+               onclick="window.location='<?php echo htmlspecialcharsbx(CUtil::addslashes($_REQUEST["back_url_settings"])) ?>'">
         <input type="hidden" name="back_url_settings" value="<?= htmlspecialcharsbx($_REQUEST["back_url_settings"]) ?>">
-    <? endif ?>
-    <input type="submit" name="RestoreDefaults" title="<? echo GetMessage("MAIN_HINT_RESTORE_DEFAULTS") ?>"
-           onclick="return confirm('<? echo AddSlashes(GetMessage("MAIN_HINT_RESTORE_DEFAULTS_WARNING")) ?>')"
-           value="<? echo GetMessage("MAIN_RESTORE_DEFAULTS") ?>">
+    <?php endif ?>
+    <input type="submit" name="RestoreDefaults" title="<?php echo GetMessage("MAIN_HINT_RESTORE_DEFAULTS") ?>"
+           onclick="return confirm('<?phph echo AddSlashes(GetMessage("MAIN_HINT_RESTORE_DEFAULTS_WARNING")) ?>')"
+           value="<?php echo GetMessage("MAIN_RESTORE_DEFAULTS") ?>">
     <?= bitrix_sessid_post(); ?>
-    <? $tabControl->End(); ?>
+    <?php $tabControl->End(); ?>
 </form>
 
 
