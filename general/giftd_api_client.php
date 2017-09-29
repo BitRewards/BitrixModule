@@ -20,7 +20,7 @@ class GiftdClient
     {
         $this->userId = trim($userId);
         $this->apiKey = trim($apiKey);
-        $this->baseUrl = (defined('GIFTD_DEBUG') && GIFTD_DEBUG) ? "https://api.giftd.local/v1/" : "http://api.giftd.ru/v1/";
+        $this->baseUrl = (defined('GIFTD_DEBUG') && GIFTD_DEBUG) ? "https://api.giftd.local/v1/" : "http://api.giftd.tech/v1/";
     }
 
     private function httpPostCurl($url, array $params)
@@ -29,7 +29,8 @@ class GiftdClient
         curl_setopt_array($ch, array(
             CURLOPT_POST => 1,
             CURLOPT_POSTFIELDS => $params,
-            CURLOPT_TIMEOUT => 5,
+            CURLOPT_TIMEOUT => 15,
+            CURLOPT_CONNECTTIMEOUT => 10,
             CURLOPT_RETURNTRANSFER => 1,
             CURLOPT_SSL_VERIFYHOST => 0,
             CURLOPT_SSL_VERIFYPEER => 0,

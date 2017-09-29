@@ -55,7 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"] . $_POST["Apply"] .
         <input type="hidden" name="back_url_settings" value="<?= htmlspecialcharsbx($_REQUEST["back_url_settings"]) ?>">
     <?php endif ?>
     <input type="submit" name="RestoreDefaults" title="<?php echo GetMessage("MAIN_HINT_RESTORE_DEFAULTS") ?>"
-           onclick="return confirm('<?phph echo AddSlashes(GetMessage("MAIN_HINT_RESTORE_DEFAULTS_WARNING")) ?>')"
+           onclick="return confirm('<?php echo AddSlashes(GetMessage("MAIN_HINT_RESTORE_DEFAULTS_WARNING")) ?>')"
            value="<?php echo GetMessage("MAIN_RESTORE_DEFAULTS") ?>">
     <?= bitrix_sessid_post(); ?>
     <?php $tabControl->End(); ?>

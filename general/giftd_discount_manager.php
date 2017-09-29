@@ -57,6 +57,9 @@ class GiftdDiscountManager
 
         if ($result === null) {
             $result = class_exists('\Bitrix\Sale\Internals\DiscountCouponTable') && class_exists('\Bitrix\Sale\DiscountCouponsManager') && !GiftdHelper::GetOption('DISABLE_BASKET_RULES');
+            if (!$result && !class_exists('CCatalogDiscount')) {
+                $result = true;
+            }
         }
 
         return $result;
@@ -144,7 +147,10 @@ class GiftdDiscountManager
             $id_discount = CSaleDiscount::Add($arDiscountFields);
         } else {
             unset($arDiscountFields['USER_GROUPS']);
-            CSaleDiscount::Update($id_discount, $arDiscountFields);
+            // unset($arDiscountFields['DISCOUNT_TYPE']);
+            // unset($arDiscountFields['DISCOUNT_VALUE']);
+            unset($arDiscountFields['PRICE_FROM']);
+            // CSaleDiscount::Update($id_discount, $arDiscountFields);
         }
 
         $discountCouponId = false;
@@ -530,14 +536,17 @@ class GiftdDiscountManager
             $orderData['USER'] = $user;
 
             $token = null;
-            if (isset($arFields['COMMENTS'])) {
-                $token = self::getTokenByOrderComment($arFields['COMMENTS']);
-            } else {
+            if (isset($orderData['COMMENTS'])) {
+                $token = self::getTokenByOrderComment($orderData['COMMENTS']);
+            }
+
+            if (!isset($token)) {
                 $card = self::$_lastGiftdCard;
                 if ($card) {
                     $token = $card->token;
                 }
             }
+
             $orderData['PROMO_CODE'] = $token;
 
             $dbResult = CSaleOrderPropsValue::GetOrderProps($orderId);
@@ -997,6 +1006,19 @@ class GiftdDiscountManager
             $registered = true;
             \Bitrix\Main\EventManager::getInstance()->addEventHandler('main', 'OnAfterEpilog', array('GiftdDiscountManager', 'FixUseCouponsFlagAfterDelete'));
         }
+    }
+
+    public static function OnSaleOrderSaved($event)
+    {
+        if (class_exists('Bitrix\Main\Event') && $event instanceof ('Bitrix\Main\Event')) {
+            $order = $event->getParameter("ENTITY");
+        } elseif ($event instanceof ("Bitrix\Main\Order")) {
+            $order = $event;
+        } else {
+            return;
+        }
+
+        self::SendOrderDataToGiftdCrm($order->getId());
     }
 
 }

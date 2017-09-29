@@ -58,7 +58,8 @@ class giftd_coupon extends CModule
 		RegisterModuleDependences('sale', 'OnOrderAdd', 'giftd.coupon', 'GiftdDiscountManager', 'UpdateExternalIdAfterOrderSave');
 
         RegisterModuleDependences('sale', 'OnSaleOrderBeforeSaved', $this->MODULE_ID, 'GiftdDiscountManager', 'ChargeCouponOnBeforeOrderAddD7Events');
-        RegisterModuleDependences('sale', 'OnSaleOrderEntitySaved', $this->MODULE_ID, 'GiftdDiscountManager', 'UpdateExternalIdAfterOrderSaveD7Events');
+
+        RegisterModuleDependences('sale', 'OnSaleOrderSaved', $this->MODULE_ID, 'GiftdDiscountManager', 'OnSaleOrderSaved');
 
         return true;
 	}
@@ -85,6 +86,8 @@ class giftd_coupon extends CModule
 
         UnRegisterModuleDependences('sale', 'OnSaleOrderBeforeSaved', 'giftd.coupon', 'GiftdDiscountManager', 'ChargeCouponOnBeforeOrderAddD7Events');
         UnRegisterModuleDependences('sale', 'OnSaleOrderEntitySaved', 'giftd.coupon', 'GiftdDiscountManager', 'UpdateExternalIdAfterOrderSaveD7Events');
+
+        UnRegisterModuleDependences('sale', 'OnSaleOrderSaved', $this->MODULE_ID, 'GiftdDiscountManager', 'OnSaleOrderSaved');
 
 		UnRegisterModule($this->MODULE_ID);
 
