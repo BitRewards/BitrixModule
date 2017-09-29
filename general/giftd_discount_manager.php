@@ -1010,9 +1010,9 @@ class GiftdDiscountManager
 
     public static function OnSaleOrderSaved($event)
     {
-        if (class_exists('Bitrix\Main\Event') && $event instanceof ('Bitrix\Main\Event')) {
+        if (class_exists('Bitrix\Main\Event') && $event instanceof \Bitrix\Main\Event) {
             $order = $event->getParameter("ENTITY");
-        } elseif ($event instanceof ("Bitrix\Main\Order")) {
+        } elseif ($event instanceof \Bitrix\Main\Order) {
             $order = $event;
         } else {
             return;
