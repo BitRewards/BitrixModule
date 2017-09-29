@@ -1,3 +1,3 @@
 <?php
 
-RegisterModuleDependences('sale', 'OnSaleOrderSaved', $this->MODULE_ID, 'GiftdDiscountManager', 'OnSaleOrderSaved');
+RegisterModuleDependences('sale', 'OnSaleOrderSaved', 'giftd.coupon', 'GiftdDiscountManager', 'OnSaleOrderSaved');
