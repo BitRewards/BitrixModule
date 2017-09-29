@@ -1012,7 +1012,7 @@ class GiftdDiscountManager
     {
         if (class_exists('\Bitrix\Main\Event') && $event instanceof \Bitrix\Main\Event) {
             $order = $event->getParameter("ENTITY");
-        } elseif (class_exists('\Bitrix\Main\Order') && $event instanceof \Bitrix\Main\Order) {
+        } elseif (class_exists('\Bitrix\Sale\Order') && $event instanceof \Bitrix\Sale\Order) {
             $order = $event;
         } else {
             return;
